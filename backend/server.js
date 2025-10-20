@@ -1,21 +1,23 @@
 require('dotenv').config()
 const express = require("express")
+const messageRoutes = require('./routes/messages') // Import routes from other file
+
 
 // Create Express App
 const app = express()
 
 
 // Middleware
+app.use(express.json())
+
 app.use((req,res,next) => {
     console.log(req.path, req.method)
     next()
 })
 
 
-// Routes
-app.get("/", (req,res) => {
-    res.json({mssg: "Welcome to the app"})
-})
+// Routes (api/messages before each route in the messageRoutes)
+app.use('/api/messages', messageRoutes)
 
 // Listen for requests 
 app.listen(process.env.PORT , () => {
