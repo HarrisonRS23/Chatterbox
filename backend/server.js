@@ -1,10 +1,10 @@
 require('dotenv').config()
 const express = require("express")
-const messageRoutes = require('./routes/messages') // Import routes from other file
-
 
 // Create Express App
 const app = express()
+const mongoose = require('mongoose')
+const messageRoutes = require('./routes/messages') // Import routes from other file
 
 
 // Middleware
@@ -19,8 +19,19 @@ app.use((req,res,next) => {
 // Routes (api/messages before each route in the messageRoutes)
 app.use('/api/messages', messageRoutes)
 
-// Listen for requests 
-app.listen(process.env.PORT , () => {
-    console.log("listening on port", process.env.PORT )
-});
+
+mongoose.connect(process.env.MONG_URI)
+    .then(() =>{
+        // Listen for requests 
+    app.listen(process.env.PORT , () => {
+        console.log("Connected to DB, listening on port", process.env.PORT )
+    })
+})
+
+.catch((error)=> {
+        console.log(error)
+ })
+
+
+
 
