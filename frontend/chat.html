@@ -11,6 +11,7 @@
 <body>
     <div class="header">
         ChatterBox
+        <button id="signOutBtn" class="sign-out-btn">Sign Out</button>
     </div>
 
     <div class="chat-container">
@@ -55,6 +56,15 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById("signOutBtn").addEventListener("click", function() {
+        
+        // Redirect to login page
+        window.location.href = "login.html";
+    });
+
+    </script>
 
     
 </body>

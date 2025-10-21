@@ -71,19 +71,40 @@ h1 {
 }
 
 /* Chat Page Styles */
-body.chat-page {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
 
 .header {
-    background: #667eea;
+    position: relative;
+    background-color: #4A90E2;
     color: white;
-    padding: 15px 20px;
-    text-align: center;
-    font-size: 1.5rem;
+    font-size: 24px;
+    padding: 10px 20px;
+    text-align: center; /* centers ChatterBox */
 }
+
+.header-title {
+    margin: 0;
+    font-weight: bold;
+}
+
+.sign-out-btn {
+    position: absolute;
+    right: 20px;      /* stick to the far right */
+    top: 50%;
+    transform: translateY(-50%); /* vertically center it */
+    background-color: #ffffff;
+    color: #4A90E2;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.sign-out-btn:hover {
+    background-color: #e1e1e1;
+}
+
 
 .chat-container {
     flex: 1;
