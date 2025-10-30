@@ -1,4 +1,3 @@
 backend/.env
-backend/node_modules
-fronted/node_modules
+**node_modules/
 .DS_Store

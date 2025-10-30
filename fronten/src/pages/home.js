@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react"
 
+// Components 
+import MessageDetails from '../components/messageDetails'
+
 const Home = () => {
     const [messages,setMessages] = useState(null)
 
@@ -22,7 +25,7 @@ const Home = () => {
         <div className="home">
             <div className="messages">
                 {messages && messages.map((message) => (
-                    <p key={message._id}>{message.sender}</p>
+                    <MessageDetails key={message._id} message = {message}></MessageDetails>
                 ))}
                 
             </div>
