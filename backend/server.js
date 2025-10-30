@@ -1,5 +1,7 @@
 require('dotenv').config()
 const express = require("express")
+const cors = require('cors')
+
 
 // Create Express App
 const app = express()
@@ -15,9 +17,12 @@ app.use((req,res,next) => {
     next()
 })
 
+app.use(cors({ origin: "http://localhost:3000" }))
 
 // Routes (api/messages before each route in the messageRoutes)
 app.use('/api/messages', messageRoutes)
+
+
 
 
 mongoose.connect(process.env.MONG_URI)
