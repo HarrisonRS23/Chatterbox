@@ -1,6 +1,9 @@
+import { useMessageContext } from "../hooks/useMessageContext"
 const { useState } = require("react")
 
+
 const MessageForm = () => {
+    const {dispatch} = useMessageContext()
     const [recipient, setRecipient] = useState('')
     const [contents, setContents] = useState('')
     const [sender, setSender] = useState('')
@@ -11,7 +14,7 @@ const MessageForm = () => {
 
         const message = { recipient, contents, sender }
 
-        const response = await fetch('/api/messages/', {
+        const response = await fetch('http://localhost:4000/api/messages', {
             method: 'POST',
             body: JSON.stringify(message),
             headers: {
@@ -29,6 +32,7 @@ const MessageForm = () => {
             setSender('')
             setError(null)
             console.log("New message Added")
+            dispatch({type: 'CREATE_MESSAGE', payload: json})
         }
     }
 

@@ -16,5 +16,4 @@ const messageSchema = new Schema({
     },
 }, {timestamps: true}) // add a created and updated property 
 
-module.exports = mongoose.model('Message', messageSchema) // create message model 
-
+module.exports = mongoose.model('Message', messageSchema) // create message model

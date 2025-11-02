@@ -23,8 +23,6 @@ app.use(cors({ origin: "http://localhost:3000" }))
 app.use('/api/messages', messageRoutes)
 
 
-
-
 mongoose.connect(process.env.MONG_URI)
     .then(() =>{
         // Listen for requests 
