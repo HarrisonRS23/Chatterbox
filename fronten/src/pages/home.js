@@ -5,7 +5,6 @@ import { useMessageContext } from "../hooks/useMessageContext"
 import MessageDetails from '../components/messageDetails'
 import MessageForm from '../components/messageForm'
 
-
 const Home = () => {
     const {messages, dispatch} = useMessageContext()
 
@@ -21,7 +20,7 @@ const Home = () => {
         }
         fetchMessages()
 
-    }, []) // only fire when first rendered
+    }, [dispatch]) // only fire when first rendered
 
     return (
         <div className="home">
@@ -29,7 +28,7 @@ const Home = () => {
                 {messages && messages.map((message) => (
                     <MessageDetails key={message._id} message = {message}></MessageDetails>
                 ))}
-            </div>
+            </div>            
             <MessageForm></MessageForm>
         </div>
     )

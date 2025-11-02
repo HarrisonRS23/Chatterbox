@@ -1,17 +1,16 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router-dom";
 
+const Navbar = () => {
+  return (
+    <header className="navbar">
+      <h1>ChatterBox</h1>
+      <nav>
+        <Link to="/">Home</Link>
+        <Link to="/login">Login</Link>
+        <Link to="/chat">Chat</Link>
+      </nav>
+    </header>
+  );
+};
 
-const NavBar = () => {
-    return (
-        <header>
-            <div className="container">
-                <Link to="/">
-                    <h1>Chattify</h1>
-                </Link>
-            </div>
-
-        </header>
-    )
-}
-
-export default NavBar
+export default Navbar;
