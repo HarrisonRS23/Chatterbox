@@ -1,6 +1,10 @@
+import LoginForm from "../components/loginForm"
+
 const Login = () => {
   return (
-    <div>Welcome</div>
+    <div className="login">
+      <LoginForm> </LoginForm>
+    </div>
   )
 }
 
