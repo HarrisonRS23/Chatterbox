@@ -23,7 +23,7 @@ const LoginForm = () => {
         //window.location.href = "chat";
 
         // Need to add route
-        const response = await fetch('http://localhost:4000/api/messages/login', {
+        const response = await fetch('http://localhost:4000/api/login', {
             method: 'POST',
             body: JSON.stringify(login),
             headers: {
