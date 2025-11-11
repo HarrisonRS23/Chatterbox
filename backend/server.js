@@ -20,10 +20,18 @@ app.use((req,res,next) => {
 })
 
 app.use(cors({ origin: "http://localhost:3000" }))
+app.use(express.json())
+
+app.use((req, res, next) => {
+  console.log(req.path, req.method)
+  next()
+})
+
 
 // Routes (api/messages before each route in the messageRoutes)
+app.use('/api/user', authRoutes)
 app.use('/api/messages', messageRoutes)
-app.use('/api/messages', authRoutes)
+
 
 
 mongoose.connect(process.env.MONG_URI)
