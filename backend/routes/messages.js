@@ -1,5 +1,7 @@
 const express = require('express')
 const Message = require('../models/messageModel')
+const requireAuth = require('../middleware/requireAuth')
+
 const {
     createMessage,
     getMessage,
@@ -9,6 +11,7 @@ const {
 } = require('../controllers/messengerController')
 
 const router = express.Router()
+router.use(requireAuth)
 
 // Get all messages
 router.get('/', getMessages)
