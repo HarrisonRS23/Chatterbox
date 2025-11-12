@@ -1,49 +1,108 @@
+import { useEffect, useState } from "react";
+import { useMessageContext } from "../hooks/useMessageContext";
+
+// Components
+import MessageDetails from "../components/messageDetails";
+import MessageForm from "../components/messageForm";
+
 const Chat = () => {
+  const { user, messages, dispatch } = useMessageContext();
+  const [conversations, setConversations] = useState([]); // list of users/convos
+  const [activeChat, setActiveChat] = useState(null); // selected conversation
+
+  //  Fetch all conversations (users messaged with)
+  useEffect(() => {
+    const fetchConversations = async () => {
+      if (!user) return;
+
+      try {
+        const response = await fetch(
+          `http://localhost:4000/api/conversations/${user._id}`,
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          }
+        );
+        const json = await response.json();
+
+        if (response.ok) {
+          setConversations(json);
+        }
+      } catch (err) {
+        console.error("Failed to fetch conversations:", err);
+      }
+    };
+
+    fetchConversations();
+  }, [user]);
+
+  // Fetch messages for selected conversation
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!user || !activeChat) return;
+
+      try {
+        const response = await fetch(
+          `http://localhost:4000/api/messages?sender=${user._id}&receiver=${activeChat._id}`,
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          }
+        );
+        const json = await response.json();
+
+        if (response.ok) {
+          dispatch({ type: "SET_MESSAGES", payload: json });
+        }
+      } catch (err) {
+        console.error("Failed to fetch messages:", err);
+      }
+    };
+
+    fetchMessages();
+  }, [dispatch, user, activeChat]);
+
+
   return (
-
     <div className="chat-container">
-        <div className="sidebar">
-            <div className="user-item active">John Doe</div>
-            <div className="user-item">Jane Smith</div>
-            <div className="user-item">Mike Johnson</div>
-            <div className="user-item">Sarah Williams</div>
-            <div className="user-item">Team Group</div>
+      {/* Sidebar — list of users/conversations */}
+      <div className="sidebar">
+        {conversations.length > 0 ? (
+          conversations.map((conv) => (
+            <div
+              key={conv._id}
+              className={`user-item ${
+                activeChat && activeChat._id === conv._id ? "active" : ""
+              }`}
+              onClick={() => setActiveChat(conv)}
+            >
+              {conv.name || conv.email}
+            </div>
+          ))
+        ) : (
+          <div className="no-convos">No conversations yet</div>
+        )}
+      </div>
+
+      {/* Chat area */}
+      <div className="chat-area">
+        <div className="chat-header">
+          {activeChat ? activeChat.name || activeChat.email : "Select a chat"}
         </div>
 
-        <div className="chat-area">
-            <div className="chat-header">
-                John Doe
-            </div>
-
-            <div className="messages" id="messages">
-                <div className="message received">
-                    <div className="message-bubble">Hey! How are you?</div>
-                    <div className="message-time">10:30 AM</div>
-                </div>
-
-                <div className="message sent">
-                    <div className="message-bubble">I'm good! Thanks for asking.</div>
-                    <div className="message-time">10:32 AM</div>
-                </div>
-
-                <div className="message received">
-                    <div className="message-bubble">Want to grab lunch later?</div>
-                    <div className="message-time">10:33 AM</div>
-                </div>
-
-                <div className="message sent">
-                    <div className="message-bubble">Sure! What time works for you?</div>
-                    <div className="message-time">10:35 AM</div>
-                </div>
-            </div>
-
-            <div className="input-area">
-                <input type="text" id="messageInput" placeholder="Type a message..."/>
-                <button onClick="sendMessage()">Send</button>
-            </div>
+        <div className="messages" id="messages">
+          {messages && messages.length > 0 ? (
+            messages.map((message) => (
+              <MessageDetails key={message._id} message={message} />
+            ))
+          ) : (
+            <div className="no-messages">No messages yet</div>
+          )}
         </div>
+
+        {/* Message input */}
+        {activeChat && <MessageForm receiver={activeChat} />}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Chat
+export default Chat;

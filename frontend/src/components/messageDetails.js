@@ -9,7 +9,6 @@ const MessageDetails = ( { message }) => {
             <h4>To: {message.recipient}</h4>
             <p>{message.contents}</p>
             <p>{formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}</p>
-
         </div>
     )
 }

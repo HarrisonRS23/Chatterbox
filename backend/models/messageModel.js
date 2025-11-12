@@ -1,19 +1,26 @@
-const mongoose = require("mongoose")
-const Schema = mongoose.Schema
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const messageSchema = new Schema({
+const messageSchema = new Schema(
+  {
     contents: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      trim: true
     },
     sender: {
-        type: String,
-        required: true
+      type: Schema.Types.ObjectId,  // references the User model
+      ref: "User",
+      required: true
     },
     recipient: {
-        type: String,
-        required: true
-    },
-}, {timestamps: true}) // add a created and updated property 
+      type: Schema.Types.ObjectId,  // references the User model
+      ref: "User",
+      required: true
+    }
+  },
+  { timestamps: true } 
+);
 
-module.exports = mongoose.model('Message', messageSchema) // create message model
+
+module.exports = mongoose.model("Message", messageSchema);
