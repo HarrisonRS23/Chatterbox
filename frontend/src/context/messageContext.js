@@ -12,7 +12,7 @@ export const messageReducer = (state, action) => {
     case "CREATE_MESSAGE":
       return {
         ...state,
-        messages: [action.payload, ...(state.messages || [])],
+        messages: [...(state.messages || []), action.payload],
       };
     case "SET_USER":
       return {

@@ -26,10 +26,18 @@ header a {
   color: #333;
   text-decoration: none;
 }
-.pages{
+.pages {
   max-width: 1400px;
   padding: 20px;
   margin: 0 auto;
+  min-height: calc(100vh - 70px);
+}
+
+/* App container */
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* homepage */
@@ -90,62 +98,150 @@ body {
   padding: 0 20px;
 }
 
-/* LANDING PAGE - HEADER */
+/* NAVBAR STYLES */
 
-header {
-  background: rgba(255, 255, 255, 0.95);
+.navbar {
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   position: sticky;
   top: 0;
   z-index: 1000;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-nav {
+.navbar-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.2rem 20px;
+  height: 70px;
 }
 
-.logo {
+.logo-container {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #667eea;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.logo-container:hover {
+  opacity: 0.8;
 }
 
 .logo-icon {
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
 }
 
-.nav-links {
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.nav-links-container {
   display: flex;
-  list-style: none;
-  gap: 2rem;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-.nav-links a {
+.nav-link {
   color: #555;
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.3s;
+  font-size: 0.95rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
 }
 
-.nav-links a:hover {
+.nav-link:hover {
   color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.nav-link-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.nav-link-primary:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.nav-user {
+  color: #667eea;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 20px;
+}
+
+.btn-logout {
+  background: #f5f5f5;
+  color: #333;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  background: #e8e8e8;
+  color: #000;
+}
+
+/* Responsive navbar */
+@media (max-width: 768px) {
+  .navbar-container {
+    padding: 0 15px;
+    height: 60px;
+  }
+  
+  .logo-text {
+    font-size: 1.2rem;
+  }
+  
+  .logo-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 18px;
+  }
+  
+  .nav-links-container {
+    gap: 0.8rem;
+  }
+  
+  .nav-link {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+  
+  .nav-user {
+    display: none;
+  }
 }
 
 .cta-button {
@@ -402,10 +498,88 @@ nav {
 /* CHAT PAGE - LAYOUT */
 
 .chat-container {
-  flex: 1;
   display: flex;
+  flex-direction: column;
   overflow: hidden;
-  height: calc(100vh - 54px);
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.chat-top-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e4e6eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  height: 60px;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.chat-main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: calc(100vh - 60px);
+}
+
+.chat-top-header-content {
+  max-width: 100%;
+  height: 100%;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.chat-logo:hover {
+  opacity: 0.8;
+}
+
+.chat-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.chat-logo-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.chat-logout-btn {
+  background: #f5f5f5;
+  color: #333;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chat-logout-btn:hover {
+  background: #e8e8e8;
+  color: #000;
 }
 
 .sidebar {
@@ -413,12 +587,33 @@ nav {
   background: #f5f5f5;
   border-right: 1px solid #ddd;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 15px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e6eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #050505;
 }
 
 .user-item {
   padding: 15px 20px;
   border-bottom: 1px solid #ddd;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .user-item:hover {
@@ -430,11 +625,21 @@ nav {
   color: white;
 }
 
+.no-convos {
+  padding: 30px 20px;
+  text-align: center;
+  color: #65676b;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .chat-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   background: #f0f2f5;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .chat-header {
@@ -457,6 +662,7 @@ nav {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  scroll-behavior: smooth;
 }
 
 .message {

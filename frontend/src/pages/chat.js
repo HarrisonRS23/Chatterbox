@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMessageContext } from "../hooks/useMessageContext";
 import { CiCirclePlus } from "react-icons/ci";
 // Components
@@ -7,12 +8,20 @@ import MessageForm from "../components/messageForm";
 import Popup from "../components/addFriend";
 
 const Chat = () => {
+  const navigate = useNavigate();
   const { user, messages, dispatch } = useMessageContext();
   const [conversations, setConversations] = useState([]); // list of users/convos
   const [activeChat, setActiveChat] = useState(null); // selected conversation
   
   // Pop-up 
   const [showPopup, setShowPopup] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    dispatch({ type: "LOGOUT" });
+    navigate("/login");
+  };
 
   const openPopup = () => {
     setShowPopup(true);
@@ -65,6 +74,13 @@ const Chat = () => {
         const json = await response.json();
         if (response.ok) {
           dispatch({ type: "SET_MESSAGES", payload: json });
+          // Scroll to bottom after messages load
+          setTimeout(() => {
+            const messagesContainer = document.getElementById("messages");
+            if (messagesContainer) {
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+          }, 100);
         }
       } catch (err) {
         console.error("Failed to fetch messages:", err);
@@ -74,6 +90,14 @@ const Chat = () => {
     fetchMessages();
   }, [dispatch, user, activeChat]);
 
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    const messagesContainer = document.getElementById("messages");
+    if (messagesContainer && messages) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }, [messages]);
+
   // Handle friend added - refresh conversations
   const handleFriendAdded = () => {
     fetchConversations();
@@ -81,8 +105,23 @@ const Chat = () => {
 
   return (
     <div className="chat-container">
-      {/* Sidebar — list of users/conversations */}
-      <div className="sidebar">
+      {/* Top header bar */}
+      <div className="chat-top-header">
+        <div className="chat-top-header-content">
+          <div className="chat-logo" onClick={() => navigate("/")}>
+            <div className="chat-logo-icon">💬</div>
+            <span className="chat-logo-text">ChatterBox</span>
+          </div>
+          <button onClick={handleLogout} className="chat-logout-btn">
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Main content area - sidebar and chat side by side */}
+      <div className="chat-main-content">
+        {/* Sidebar — list of users/conversations */}
+        <div className="sidebar">
         <div className="sidebar-header">
           <h2>Chats</h2>
           <CiCirclePlus 
@@ -143,6 +182,7 @@ const Chat = () => {
 
         {/* Message input */}
         {activeChat && <MessageForm receiver={activeChat} user={user} />}
+      </div>
       </div>
     </div>
   );

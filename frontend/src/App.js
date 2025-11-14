@@ -12,22 +12,15 @@ import Register from "./pages/register";
 function App() {
   return (
     <div className="App">
-
       <BrowserRouter>
-        <NavBar></NavBar>
-
-        <div className="pages">
-          <Routes>
-            <Route path="/" element={<Message />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/chat" element={<Chat />} />
-          </Routes>
-
-        </div>
-
+        <NavBar />
+        <Routes>
+          <Route path="/" element={<Message />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/chat" element={<Chat />} />
+        </Routes>
       </BrowserRouter>
-
     </div>
   )
 }
