@@ -6,18 +6,17 @@ const User = require("../models/userModel");
 
 const router = express.Router();
 
-// Require authentication for all message routes
+// Require authentication for all routes
 router.use(requireAuth);
 
 // ---------- Get messages between two users ----------
 router.get("/", async (req, res) => {
-  const userId = req.user._id; // from requireAuth middleware
+  const userId = req.user.id;
   const { sender, receiver } = req.query;
 
   try {
     let filter = {};
 
-    // If both sender and receiver are provided, return only those messages
     if (sender && receiver) {
       filter = {
         $or: [
@@ -26,10 +25,7 @@ router.get("/", async (req, res) => {
         ],
       };
     } else {
-      // Default: show all messages for the logged-in user
-      filter = {
-        $or: [{ sender: userId }, { recipient: userId }],
-      };
+      filter = { $or: [{ sender: userId }, { recipient: userId }] };
     }
 
     const messages = await Message.find(filter)
@@ -39,7 +35,8 @@ router.get("/", async (req, res) => {
 
     res.status(200).json(messages);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Get messages error:", err);
+    res.status(500).json({ error: "Server error fetching messages" });
   }
 });
 
@@ -48,28 +45,29 @@ router.get("/conversations/:userId", async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Find all messages where user is involved
     const messages = await Message.find({
       $or: [{ sender: userId }, { recipient: userId }],
     })
       .populate("sender", "email name")
       .populate("recipient", "email name");
 
-    // Get user's friends list
-    const currentUser = await User.findById(userId).populate("friends", "email name");
-    
-    // Extract unique participants from messages
+    const currentUser = await User.findById(userId).populate(
+      "friends",
+      "email name"
+    );
+
     const participants = new Map();
+
+    // Add users from messages
     messages.forEach((msg) => {
       const otherUser =
         msg.sender._id.toString() === userId ? msg.recipient : msg.sender;
-      
       if (otherUser && !participants.has(otherUser._id.toString())) {
         participants.set(otherUser._id.toString(), otherUser);
       }
     });
 
-    // Add friends who haven't been messaged yet
+    // Include friends who haven't been messaged yet
     if (currentUser && currentUser.friends) {
       currentUser.friends.forEach((friend) => {
         if (!participants.has(friend._id.toString())) {
@@ -80,20 +78,43 @@ router.get("/conversations/:userId", async (req, res) => {
 
     res.status(200).json(Array.from(participants.values()));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Get conversations error:", err);
+    res.status(500).json({ error: "Server error fetching conversations" });
   }
 });
 
 // ---------- Create a new message ----------
 router.post("/", async (req, res) => {
   const { contents, recipient } = req.body;
-  const sender = req.user._id; // sender comes from logged-in user
+  const sender = req.user?.id || req.user?._id; // Use .id or ._id from decoded token
+
+  if (!contents || !recipient) {
+    return res.status(400).json({ error: "Recipient and contents are required" });
+  }
+
+  if (!sender) {
+    console.error("Sender not found in req.user:", req.user);
+    return res.status(401).json({ error: "User authentication failed" });
+  }
+
+  // Ensure sender is a string (ObjectId string)
+  const senderId = String(sender);
 
   try {
-    const message = await Message.create({ contents, sender, recipient });
+    const message = await Message.create({
+      contents,
+      sender: senderId,
+      recipient
+    });
+
+    // Populate sender and recipient info
+    await message.populate('sender', 'email name');
+    await message.populate('recipient', 'email name');
+
     res.status(201).json(message);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+  } catch (err) {
+    console.error("Create message error:", err);
+    res.status(500).json({ error: "Server error creating message", details: err.message });
   }
 });
 
@@ -101,12 +122,11 @@ router.post("/", async (req, res) => {
 router.post("/friends/add", async (req, res) => {
   const { userId, friendEmail } = req.body;
 
-  try {
-    // Validate input
-    if (!friendEmail || !friendEmail.trim()) {
-      return res.status(400).json({ error: "Email is required" });
-    }
+  if (!friendEmail || !friendEmail.trim()) {
+    return res.status(400).json({ error: "Friend email is required" });
+  }
 
+  try {
     const currentUser = await User.findById(userId);
     if (!currentUser) {
       return res.status(404).json({ error: "Current user not found" });
@@ -117,32 +137,21 @@ router.post("/friends/add", async (req, res) => {
       return res.status(404).json({ error: "User with that email not found" });
     }
 
-    // Can't add yourself
     if (currentUser._id.toString() === friend._id.toString()) {
-      return res.status(400).json({ error: "You cannot add yourself as a friend" });
+      return res.status(400).json({ error: "Cannot add yourself as a friend" });
     }
 
-    // Check if already friends
-    if (currentUser.friends && currentUser.friends.includes(friend._id)) {
+    if (!currentUser.friends) currentUser.friends = [];
+    if (currentUser.friends.includes(friend._id)) {
       return res.status(400).json({ error: "Already friends with this user" });
     }
 
-    // Initialize friends array if it doesn't exist
-    if (!currentUser.friends) {
-      currentUser.friends = [];
-    }
-
-    // Add friend (one-way for now; you could make it bidirectional)
     currentUser.friends.push(friend._id);
     await currentUser.save();
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Friend added successfully",
-      friend: {
-        _id: friend._id,
-        email: friend.email,
-        name: friend.name
-      }
+      friend: { _id: friend._id, email: friend.email, name: friend.name },
     });
   } catch (err) {
     console.error("Add friend error:", err);
@@ -156,7 +165,6 @@ router.get("/friends/:userId", async (req, res) => {
 
   try {
     const user = await User.findById(userId).populate("friends", "email name");
-    
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }

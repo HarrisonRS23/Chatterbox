@@ -11,9 +11,13 @@ const requireAuth = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     req.user = decoded // attach user info to the request
+    // Ensure id is set (it should be from the token payload)
+    if (!req.user.id && !req.user._id) {
+      console.error("Token decoded but missing id field:", decoded)
+    }
     next()
   } catch (err) {
-    console.error(err)
+    console.error("JWT verification error:", err)
     res.status(403).json({ message: "Invalid or expired token" })
   }
 }

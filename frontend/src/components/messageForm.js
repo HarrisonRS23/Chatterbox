@@ -1,53 +1,69 @@
-import { useMessageContext } from "../hooks/useMessageContext"
-import { useState } from "react"
+import { useMessageContext } from "../hooks/useMessageContext";
+import { useState } from "react";
 
 const MessageForm = ({ receiver }) => {
-  const { user, dispatch } = useMessageContext()
-  const [contents, setContents] = useState("")
-  const [error, setError] = useState("")
+  const { dispatch } = useMessageContext();
+  const [contents, setContents] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const message = {
-      sender: user.id,
-      recipient: receiver._id,
+    if (!contents.trim()) {
+      setError("Please type a message.");
+      return;
+    }
+
+    // Send message payload (sender is set by backend from authenticated user)
+    const message = { 
+      recipient: receiver._id, 
       contents
+    };
+    
+    console.log("Sending message:", message);
+
+    try {
+      const response = await fetch("http://localhost:4000/api/messages", {
+        method: "POST",
+        body: JSON.stringify(message),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        setError(json.error || "Failed to send message.");
+        console.error("Server error:", json);
+      } else {
+        setContents("");
+        setError("");
+        dispatch({ type: "CREATE_MESSAGE", payload: json });
+      }
+    } catch (err) {
+      console.error("Send message error:", err);
+      setError("Something went wrong. Try again.");
     }
-
-    const response = await fetch("http://localhost:4000/api/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-      },
-      body: JSON.stringify(message)
-    })
-
-    const json = await response.json()
-
-    if (!response.ok) {
-      setError(json.error)
-    } else {
-      setContents("")
-      setError("")
-      dispatch({ type: "CREATE_MESSAGE", payload: json })
-    }
-  }
+  };
 
   return (
     <form className="message-form" onSubmit={handleSubmit}>
       <input
         type="text"
-        placeholder="Type a message..."
         value={contents}
         onChange={(e) => setContents(e.target.value)}
+        placeholder={`Message ${receiver.name || receiver.email}...`}
         required
+        className="message-input"
       />
-      <button type="submit">Send</button>
-      {error && <p className="error">{error}</p>}
+      <button type="submit" className="send-button">
+        Send
+      </button>
+      {error && <div className="error">{error}</div>}
     </form>
-  )
-}
+  );
+};
 
-export default MessageForm
+export default MessageForm;

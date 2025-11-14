@@ -56,7 +56,6 @@ const Chat = () => {
       if (!user || !activeChat) return;
 
       try {
-
         const response = await fetch(
           `http://localhost:4000/api/messages?sender=${user.id}&receiver=${activeChat._id}`,
           {
@@ -101,7 +100,7 @@ const Chat = () => {
             <div
               key={conv._id}
               className={`user-item ${
-                activeChat && activeChat.id === conv.id ? "active" : ""
+                activeChat && activeChat._id === conv._id ? "active" : ""
               }`}
               onClick={() => setActiveChat(conv)}
             >
@@ -130,21 +129,20 @@ const Chat = () => {
           {activeChat ? (
             messages && messages.length > 0 ? (
               messages.map((message) => (
-                <MessageDetails key={message.id} message={message} />
+                <MessageDetails key={message._id} message={message} />
               ))
             ) : (
               <div className="no-messages">No messages yet. Start the conversation!</div>
             )
           ) : (
             <div className="no-messages">
-              
               <p>Select a chat or add a friend to get started</p>
             </div>
           )}
         </div>
 
         {/* Message input */}
-        {activeChat && <MessageForm receiver={activeChat} />}
+        {activeChat && <MessageForm receiver={activeChat} user={user} />}
       </div>
     </div>
   );
