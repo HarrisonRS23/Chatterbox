@@ -1,37 +1,52 @@
 import { useEffect, useState } from "react";
 import { useMessageContext } from "../hooks/useMessageContext";
-
+import { CiCirclePlus } from "react-icons/ci";
 // Components
 import MessageDetails from "../components/messageDetails";
 import MessageForm from "../components/messageForm";
+import Popup from "../components/addFriend";
 
 const Chat = () => {
   const { user, messages, dispatch } = useMessageContext();
   const [conversations, setConversations] = useState([]); // list of users/convos
   const [activeChat, setActiveChat] = useState(null); // selected conversation
+  
+  // Pop-up 
+  const [showPopup, setShowPopup] = useState(false);
 
-  //  Fetch all conversations (users messaged with)
-  useEffect(() => {
-    const fetchConversations = async () => {
-      if (!user) return;
+  const openPopup = () => {
+    setShowPopup(true);
+  };
 
-      try {
-        const response = await fetch(
-          `http://localhost:4000/api/conversations/${user._id}`,
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          }
-        );
-        const json = await response.json();
+  const closePopup = () => {
+    setShowPopup(false);
+  };
 
-        if (response.ok) {
-          setConversations(json);
+  const addFriend = () => {
+    openPopup();
+  };
+
+  // Fetch all conversations (users messaged with)
+  const fetchConversations = async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/messages/conversations/${user.id}`, 
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
-      } catch (err) {
-        console.error("Failed to fetch conversations:", err);
+      );
+      const json = await response.json();
+      if (response.ok) {
+        setConversations(json);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch conversations:", err);
+    }
+  };
 
+  useEffect(() => {
     fetchConversations();
   }, [user]);
 
@@ -41,14 +56,14 @@ const Chat = () => {
       if (!user || !activeChat) return;
 
       try {
+
         const response = await fetch(
-          `http://localhost:4000/api/messages?sender=${user._id}&receiver=${activeChat._id}`,
+          `http://localhost:4000/api/messages?sender=${user.id}&receiver=${activeChat._id}`,
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           }
         );
         const json = await response.json();
-
         if (response.ok) {
           dispatch({ type: "SET_MESSAGES", payload: json });
         }
@@ -60,17 +75,33 @@ const Chat = () => {
     fetchMessages();
   }, [dispatch, user, activeChat]);
 
+  // Handle friend added - refresh conversations
+  const handleFriendAdded = () => {
+    fetchConversations();
+  };
 
   return (
     <div className="chat-container">
       {/* Sidebar — list of users/conversations */}
       <div className="sidebar">
+        <div className="sidebar-header">
+          <h2>Chats</h2>
+          <CiCirclePlus 
+            onClick={addFriend}
+            style={{ 
+              fontSize: "32px", 
+              cursor: "pointer",
+              transition: "transform 0.2s"
+            }}
+            title="Add Friend"
+          />
+        </div>
         {conversations.length > 0 ? (
           conversations.map((conv) => (
             <div
               key={conv._id}
               className={`user-item ${
-                activeChat && activeChat._id === conv._id ? "active" : ""
+                activeChat && activeChat.id === conv.id ? "active" : ""
               }`}
               onClick={() => setActiveChat(conv)}
             >
@@ -78,23 +109,37 @@ const Chat = () => {
             </div>
           ))
         ) : (
-          <div className="no-convos">No conversations yet</div>
+          <div className="no-convos">No conversations yet. Add a friend to start chatting!</div>
         )}
       </div>
 
       {/* Chat area */}
       <div className="chat-area">
+        <Popup 
+          show={showPopup} 
+          onClose={closePopup} 
+          user={user}
+          onFriendAdded={handleFriendAdded}
+        />
+        
         <div className="chat-header">
           {activeChat ? activeChat.name || activeChat.email : "Select a chat"}
         </div>
 
         <div className="messages" id="messages">
-          {messages && messages.length > 0 ? (
-            messages.map((message) => (
-              <MessageDetails key={message._id} message={message} />
-            ))
+          {activeChat ? (
+            messages && messages.length > 0 ? (
+              messages.map((message) => (
+                <MessageDetails key={message.id} message={message} />
+              ))
+            ) : (
+              <div className="no-messages">No messages yet. Start the conversation!</div>
+            )
           ) : (
-            <div className="no-messages">No messages yet</div>
+            <div className="no-messages">
+              
+              <p>Select a chat or add a friend to get started</p>
+            </div>
           )}
         </div>
 

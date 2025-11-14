@@ -1,73 +1,53 @@
 import { useMessageContext } from "../hooks/useMessageContext"
-const { useState } = require("react")
+import { useState } from "react"
 
+const MessageForm = ({ receiver }) => {
+  const { user, dispatch } = useMessageContext()
+  const [contents, setContents] = useState("")
+  const [error, setError] = useState("")
 
-const MessageForm = () => {
-    const {dispatch} = useMessageContext()
-    const [recipient, setRecipient] = useState('')
-    const [contents, setContents] = useState('')
-    const [sender, setSender] = useState('')
-    const [error, setError] = useState('')
+  const handleSubmit = async (e) => {
+    e.preventDefault()
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-
-        const message = { recipient, contents, sender }
-
-        const response = await fetch('http://localhost:4000/api/messages', {
-            method: 'POST',
-            body: JSON.stringify(message),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        const json = await response.json()
-
-        if (!response.ok) {
-            setError(json.error)
-        }
-        if (response.ok) {
-            setContents('')
-            setRecipient('')
-            setSender('')
-            setError(null)
-            console.log("New message Added")
-            dispatch({type: 'CREATE_MESSAGE', payload: json})
-        }
+    const message = {
+      sender: user.id,
+      recipient: receiver._id,
+      contents
     }
 
+    const response = await fetch("http://localhost:4000/api/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify(message)
+    })
 
-    return (
-        <form className="create" onSubmit={handleSubmit}>
-            <h3>Send a new message</h3>
-            <label>Recipient</label>
-            <input
-                type="text"
-                onChange={(e) => setRecipient(e.target.value)}
-                value={recipient}
-            />
+    const json = await response.json()
 
-            <label>Sender</label>
-            <input
-                type="text"
-                onChange={(e) => setSender(e.target.value)}
-                value={sender}
-            />
+    if (!response.ok) {
+      setError(json.error)
+    } else {
+      setContents("")
+      setError("")
+      dispatch({ type: "CREATE_MESSAGE", payload: json })
+    }
+  }
 
-            <label>Contents</label>
-            <input
-                type="text"
-                onChange={(e) => setContents(e.target.value)}
-                value={contents}
-            />
-
-            <button>
-                Send message
-            </button>
-            {error && <div className="error">{error}</div>}
-        </form>
-
-    )
+  return (
+    <form className="message-form" onSubmit={handleSubmit}>
+      <input
+        type="text"
+        placeholder="Type a message..."
+        value={contents}
+        onChange={(e) => setContents(e.target.value)}
+        required
+      />
+      <button type="submit">Send</button>
+      {error && <p className="error">{error}</p>}
+    </form>
+  )
 }
 
 export default MessageForm
