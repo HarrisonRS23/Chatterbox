@@ -66,7 +66,9 @@ const Navbar = () => {
               <Link to="/chat" className="nav-link">Chat</Link>
               {user && (
                 <span className="nav-user">
-                  {user.name || user.email?.split("@")[0]}
+                  {user.firstname && user.lastname 
+                    ? `${user.firstname} ${user.lastname}` 
+                    : user.email?.split("@")[0]}
                 </span>
               )}
               <button onClick={handleLogout} className="btn-logout">

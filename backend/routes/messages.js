@@ -30,8 +30,8 @@ router.get("/", async (req, res) => {
 
     const messages = await Message.find(filter)
       .sort({ createdAt: 1 })
-      .populate("sender", "email name")
-      .populate("recipient", "email name");
+      .populate("sender", "email firstname lastname")
+      .populate("recipient", "email firstname lastname");
 
     res.status(200).json(messages);
   } catch (err) {
@@ -48,12 +48,12 @@ router.get("/conversations/:userId", async (req, res) => {
     const messages = await Message.find({
       $or: [{ sender: userId }, { recipient: userId }],
     })
-      .populate("sender", "email name")
-      .populate("recipient", "email name");
+      .populate("sender", "email firstname lastname")
+      .populate("recipient", "email firstname lastname")
+
 
     const currentUser = await User.findById(userId).populate(
-      "friends",
-      "email name"
+      "friends", "email firstname lastname"
     );
 
     const participants = new Map();
@@ -108,8 +108,8 @@ router.post("/", async (req, res) => {
     });
 
     // Populate sender and recipient info
-    await message.populate('sender', 'email name');
-    await message.populate('recipient', 'email name');
+    await message.populate("sender", "email firstname lastname")
+    await message.populate("recipient", "email firstname lastname")
 
     res.status(201).json(message);
   } catch (err) {
@@ -151,7 +151,8 @@ router.post("/friends/add", async (req, res) => {
 
     res.status(200).json({
       message: "Friend added successfully",
-      friend: { _id: friend._id, email: friend.email, name: friend.name },
+      friend: { _id: friend._id, email: friend.email, firstname: friend.firstname, lastname: friend.lastname }
+
     });
   } catch (err) {
     console.error("Add friend error:", err);
@@ -164,7 +165,8 @@ router.get("/friends/:userId", async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const user = await User.findById(userId).populate("friends", "email name");
+    const user = await User.findById(userId).populate("friends", "email firstname lastname");
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }

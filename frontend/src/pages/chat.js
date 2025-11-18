@@ -144,7 +144,9 @@ const Chat = () => {
               }`}
               onClick={() => setActiveChat(conv)}
             >
-              {conv.name || conv.email}
+              {(conv.firstname && conv.lastname)
+              ? `${conv.firstname} ${conv.lastname}`
+              : conv.email}
             </div>
           ))
         ) : (
@@ -162,7 +164,11 @@ const Chat = () => {
         />
         
         <div className="chat-header">
-          {activeChat ? activeChat.name || activeChat.email : "Select a chat"}
+          {activeChat 
+            ? (activeChat.firstname && activeChat.lastname 
+                ? `${activeChat.firstname} ${activeChat.lastname}` 
+                : activeChat.email)
+            : "Select a chat"}
         </div>
 
         <div className="messages" id="messages">
