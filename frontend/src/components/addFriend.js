@@ -1,5 +1,6 @@
 // src/components/addFriend.js
 import React, { useState } from "react";
+import API_URL from "../config/api";
 
 const AddFriend = ({ show, onClose, user, onFriendAdded }) => {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ const AddFriend = ({ show, onClose, user, onFriendAdded }) => {
     setStatus("");
 
     try {
-      const response = await fetch("http://localhost:4000/api/messages/friends/add", {
+      const response = await fetch(`${API_URL}/api/messages/friends/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

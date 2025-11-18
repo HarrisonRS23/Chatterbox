@@ -1,5 +1,6 @@
 import { useMessageContext } from "../hooks/useMessageContext";
 import { useState } from "react";
+import API_URL from "../config/api";
 
 const MessageForm = ({ receiver }) => {
   const { dispatch } = useMessageContext();
@@ -23,7 +24,7 @@ const MessageForm = ({ receiver }) => {
     console.log("Sending message:", message);
 
     try {
-      const response = await fetch("http://localhost:4000/api/messages", {
+      const response = await fetch(`${API_URL}/api/messages`, {
         method: "POST",
         body: JSON.stringify(message),
         headers: {

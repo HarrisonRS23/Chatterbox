@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMessageContext } from "../hooks/useMessageContext";
 import { CiCirclePlus } from "react-icons/ci";
+import API_URL from "../config/api";
 // Components
 import MessageDetails from "../components/messageDetails";
 import MessageForm from "../components/messageForm";
@@ -41,7 +42,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:4000/api/messages/conversations/${user.id}`, 
+        `${API_URL}/api/messages/conversations/${user.id}`, 
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -66,7 +67,7 @@ const Chat = () => {
 
       try {
         const response = await fetch(
-          `http://localhost:4000/api/messages?sender=${user.id}&receiver=${activeChat._id}`,
+          `${API_URL}/api/messages?sender=${user.id}&receiver=${activeChat._id}`,
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           }
