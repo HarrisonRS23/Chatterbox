@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMessageContext } from "../hooks/useMessageContext";
 import { CiCirclePlus } from "react-icons/ci";
@@ -37,7 +37,7 @@ const Chat = () => {
   };
 
   // Fetch all conversations (users messaged with)
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -54,11 +54,11 @@ const Chat = () => {
     } catch (err) {
       console.error("Failed to fetch conversations:", err);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchConversations();
-  }, [user]);
+  }, [fetchConversations]);
 
   // Fetch messages for selected conversation
   useEffect(() => {
