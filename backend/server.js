@@ -19,7 +19,15 @@ app.use((req,res,next) => {
     next()
 })
 
-app.use(cors({ origin: "http://localhost:3000" }))
+app.use(cors({
+  origin: [
+    "http://localhost:3000",                  // local dev
+    "https://chatterbox-9e5d6.web.app",           // URL of frontend 
+    "https://chatterbox-3bwf.onrender.com",      // URL of backend 
+  ],
+  credentials: true
+}));
+
 app.use(express.json())
 
 app.use((req, res, next) => {
