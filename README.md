@@ -78,7 +78,6 @@ Please ensure your code follows our coding standards and includes appropriate te
 
 Created and maintained by Harrison Sheldon (https://github.com/harrisonRS23)
 
-Special thanks to all contributors who have helped shape Chatterbox.
 
 ## License
 
