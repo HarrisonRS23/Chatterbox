@@ -52,7 +52,16 @@ router.post('/login', async (req, res) => {
 // ---------- REGISTER ----------
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { firstname, lastname, email, password} = req.body;
+
+    // Validate required fields
+    if (!firstname || !firstname.trim()) {
+      return res.status(400).json({ message: 'First name is required' });
+    }
+    
+    if (!lastname || !lastname.trim()) {
+      return res.status(400).json({ message: 'Last name is required' });
+    }
 
     // Validate input
     if (!email || !password) {
@@ -69,7 +78,13 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const newUser = new User({ email, password: hashedPassword });
+    const newUser = new User({ 
+      firstname: firstname.trim(), 
+      lastname: lastname.trim(), 
+      email: email.trim(), 
+      password: hashedPassword 
+    });
+    
     await newUser.save();
 
     // Optional: Auto-login after register
@@ -82,10 +97,22 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       message: 'User registered successfully',
       token,
-      user: { id: newUser._id, email: newUser.email },
+      user: { 
+        id: newUser._id, 
+        email: newUser.email,
+        firstname: newUser.firstname,
+        lastname: newUser.lastname
+      },
     });
   } catch (err) {
     console.error('Register Error:', err);
+    
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ message: errors.join(', ') });
+    }
+    
     res.status(500).json({ message: 'Server error' });
   }
 });

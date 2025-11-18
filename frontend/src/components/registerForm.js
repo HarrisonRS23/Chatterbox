@@ -24,6 +24,12 @@ const Register = () => {
     setError("");
     setSuccess("");
 
+    // Validate required fields
+    if (!formData.firstName || !formData.lastName) {
+      setError("First name and last name are required");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -34,6 +40,8 @@ const Register = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          firstname: formData.firstName,
+          lastname: formData.lastName,
           email: formData.email,
           password: formData.password,
         }),
@@ -72,6 +80,7 @@ const Register = () => {
             placeholder="Enter your first name"
             value={formData.firstName}
             onChange={handleChange}
+            required
           />
         </div>
 
@@ -83,6 +92,7 @@ const Register = () => {
             placeholder="Enter your last name"
             value={formData.lastName}
             onChange={handleChange}
+            required
           />
         </div>
 
