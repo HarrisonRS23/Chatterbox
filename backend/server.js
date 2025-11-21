@@ -14,27 +14,24 @@ const authRoutes = require('./routes/auth') // Import routes from other file
 // Middleware
 app.use(express.json())
 
-app.use((req,res,next) => {
-    console.log(req.path, req.method)
-    next()
-})
-
-app.use(cors({
-  origin: [
-    "http://localhost:3000",                  // local dev
-    "https://chatterbox-9e5d6.web.app",           // URL of frontend 
-    "https://chatterbox-3bwf.onrender.com",      // URL of backend 
-  ],
-  credentials: true
-}));
-
-app.use(express.json())
-
 app.use((req, res, next) => {
   console.log(req.path, req.method)
   next()
 })
 
+app.use(cors({
+  origin: [
+    "http://localhost:3000",                  // local dev
+    "https://chatterbox-9e5d6.web.app",       // URL of frontend 
+  ],
+  credentials: true
+}));
+
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is running' })
+})
 
 // Routes (api/messages before each route in the messageRoutes)
 app.use('/api/user', authRoutes)
@@ -43,16 +40,17 @@ app.use('/api/messages', messageRoutes)
 
 
 mongoose.connect(process.env.MONG_URI)
-    .then(() =>{
+    .then(() => {
         // Listen for requests 
-    app.listen(process.env.PORT , () => {
-        console.log("Connected to DB, listening on port", process.env.PORT )
+        const port = process.env.PORT || 4000
+        app.listen(port, () => {
+            console.log("Connected to DB, listening on port", port)
+        })
     })
-})
-
-.catch((error)=> {
-        console.log(error)
- })
+    .catch((error) => {
+        console.error("Database connection error:", error)
+        process.exit(1)
+    })
 
 
 
