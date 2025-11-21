@@ -5,8 +5,19 @@ const messageSchema = new Schema(
   {
     contents: {
       type: String,
-      required: true,
-      trim: true
+      required: false,
+      trim: true,
+      default: ""
+    },
+    image: {
+      data: {
+        type: Buffer,
+        required: false
+      },
+      contentType: {
+        type: String,
+        required: false
+      }
     },
     sender: {
       type: Schema.Types.ObjectId,  // references the User model

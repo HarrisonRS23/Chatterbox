@@ -1,10 +1,31 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const multer = require("multer");
 const Message = require("../models/messageModel");
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../models/userModel");
 
 const router = express.Router();
+
+// Configure multer for file uploads - store in memory for MongoDB
+const storage = multer.memoryStorage();
+
+// File filter to only accept images
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed"), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
 
 // Require authentication for all routes
 router.use(requireAuth);
@@ -29,11 +50,21 @@ router.get("/", async (req, res) => {
     }
 
     const messages = await Message.find(filter)
+      .select("-image.data") // Exclude image buffer from response
       .sort({ createdAt: 1 })
       .populate("sender", "email firstname lastname")
       .populate("recipient", "email firstname lastname");
 
-    res.status(200).json(messages);
+    // Add imageId to messages that have images
+    const messagesWithImageId = messages.map(msg => {
+      const msgObj = msg.toObject();
+      if (msgObj.image && msgObj.image.contentType) {
+        msgObj.imageId = msg._id.toString();
+      }
+      return msgObj;
+    });
+
+    res.status(200).json(messagesWithImageId);
   } catch (err) {
     console.error("Get messages error:", err);
     res.status(500).json({ error: "Server error fetching messages" });
@@ -48,6 +79,7 @@ router.get("/conversations/:userId", async (req, res) => {
     const messages = await Message.find({
       $or: [{ sender: userId }, { recipient: userId }],
     })
+      .select("-image.data") // Exclude image buffer from response
       .populate("sender", "email firstname lastname")
       .populate("recipient", "email firstname lastname")
 
@@ -84,12 +116,44 @@ router.get("/conversations/:userId", async (req, res) => {
 });
 
 // ---------- Create a new message ----------
-router.post("/", async (req, res) => {
-  const { contents, recipient } = req.body;
+router.post("/", (req, res, next) => {
+  upload.single("image")(req, res, (err) => {
+    if (err) {
+      // Handle multer errors
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: "File too large. Maximum size is 5MB." });
+        }
+        return res.status(400).json({ error: err.message });
+      }
+      // Handle other errors (like fileFilter errors)
+      if (err.message === "Only image files are allowed") {
+        return res.status(400).json({ error: err.message });
+      }
+      return res.status(400).json({ error: "File upload error: " + err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
+  // Debug logging
+  console.log("Request body:", req.body);
+  console.log("Request file:", req.file);
+  console.log("Content-Type:", req.headers['content-type']);
+  
+  // Safely extract from req.body (multer populates this for form-data)
+  // If req.body is undefined, initialize it as empty object
+  const body = req.body || {};
+  const contents = body.contents || "";
+  const recipient = body.recipient;
   const sender = req.user?.id || req.user?._id; // Use .id or ._id from decoded token
 
-  if (!contents || !recipient) {
-    return res.status(400).json({ error: "Recipient and contents are required" });
+  // At least one of contents or image must be provided
+  if ((!contents || !contents.trim()) && !req.file) {
+    return res.status(400).json({ error: "Either message content or an image is required" });
+  }
+
+  if (!recipient) {
+    return res.status(400).json({ error: "Recipient is required" });
   }
 
   if (!sender) {
@@ -101,8 +165,18 @@ router.post("/", async (req, res) => {
   const senderId = String(sender);
 
   try {
+    // Prepare image data for MongoDB if file was uploaded
+    let imageData = null;
+    if (req.file) {
+      imageData = {
+        data: req.file.buffer,
+        contentType: req.file.mimetype
+      };
+    }
+
     const message = await Message.create({
-      contents,
+      contents: contents || "",
+      image: imageData,
       sender: senderId,
       recipient
     });
@@ -111,7 +185,14 @@ router.post("/", async (req, res) => {
     await message.populate("sender", "email firstname lastname")
     await message.populate("recipient", "email firstname lastname")
 
-    res.status(201).json(message);
+    // Return message without image buffer (send imageId instead)
+    const messageResponse = message.toObject();
+    if (messageResponse.image && messageResponse.image.data) {
+      messageResponse.imageId = message._id.toString();
+      delete messageResponse.image; // Don't send the buffer in the response
+    }
+
+    res.status(201).json(messageResponse);
   } catch (err) {
     console.error("Create message error:", err);
     res.status(500).json({ error: "Server error creating message", details: err.message });
@@ -120,7 +201,8 @@ router.post("/", async (req, res) => {
 
 // ---------- Add a friend ----------
 router.post("/friends/add", async (req, res) => {
-  const { userId, friendEmail } = req.body;
+  const body = req.body || {};
+  const { userId, friendEmail } = body;
 
   if (!friendEmail || !friendEmail.trim()) {
     return res.status(400).json({ error: "Friend email is required" });
@@ -175,6 +257,36 @@ router.get("/friends/:userId", async (req, res) => {
   } catch (err) {
     console.error("Get friends error:", err);
     res.status(500).json({ error: "Server error while fetching friends" });
+  }
+});
+
+// ---------- Get image by message ID ----------
+router.get("/image/:messageId", async (req, res) => {
+  const { messageId } = req.params;
+  const userId = req.user?.id || req.user?._id;
+
+  try {
+    const message = await Message.findById(messageId).select("image sender recipient");
+
+    if (!message || !message.image || !message.image.data) {
+      return res.status(404).json({ error: "Image not found" });
+    }
+
+    // Verify user has access to this message (must be sender or recipient)
+    const senderId = message.sender?.toString() || message.sender;
+    const recipientId = message.recipient?.toString() || message.recipient;
+    const userIdStr = userId?.toString() || userId;
+
+    if (senderId !== userIdStr && recipientId !== userIdStr) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Set appropriate content type and send image buffer
+    res.contentType(message.image.contentType);
+    res.send(message.image.data);
+  } catch (err) {
+    console.error("Get image error:", err);
+    res.status(500).json({ error: "Server error fetching image" });
   }
 });
 

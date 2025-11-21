@@ -1,35 +1,49 @@
 import { useMessageContext } from "../hooks/useMessageContext";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { AiOutlinePicture } from "react-icons/ai";
 import API_URL from "../config/api";
 
 const MessageForm = ({ receiver }) => {
   const { dispatch } = useMessageContext();
   const [contents, setContents] = useState("");
   const [error, setError] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  // Ref for hidden file input
+  const fileInputRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!contents.trim()) {
-      setError("Please type a message.");
+    if (!contents.trim() && !selectedImage) {
+      setError("Please type a message or attach an image.");
       return;
     }
 
-    // Send message payload (sender is set by backend from authenticated user)
-    const message = { 
-      recipient: receiver._id, 
-      contents
-    };
-    
-    console.log("Sending message:", message);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("You must be logged in to send messages.");
+      return;
+    }
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.id) {
+      setError("User information not found. Please log in again.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("sender", user.id);
+    formData.append("recipient", receiver._id);
+    formData.append("contents", contents);
+    if (selectedImage) formData.append("image", selectedImage);
 
     try {
       const response = await fetch(`${API_URL}/api/messages`, {
         method: "POST",
-        body: JSON.stringify(message),
+        body: formData,
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -37,31 +51,64 @@ const MessageForm = ({ receiver }) => {
 
       if (!response.ok) {
         setError(json.error || "Failed to send message.");
-        console.error("Server error:", json);
       } else {
         setContents("");
+        setSelectedImage(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
         setError("");
         dispatch({ type: "CREATE_MESSAGE", payload: json });
       }
     } catch (err) {
-      console.error("Send message error:", err);
       setError("Something went wrong. Try again.");
     }
   };
 
   return (
     <form className="message-form" onSubmit={handleSubmit}>
+      {/* ICON → opens file selector */}
+      <div className="pic-button">
+        <AiOutlinePicture
+          size={30}
+          className="pic"
+          onClick={() => fileInputRef.current.click()}
+        />
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          accept="image/*"
+          onChange={(e) => setSelectedImage(e.target.files[0])}
+        />
+      </div>
+
+      {/* Preview */}
+      {selectedImage && (
+        <div>
+          <img
+            src={URL.createObjectURL(selectedImage)}
+            alt="preview"
+            width="200px"
+          />
+          <button type="button" onClick={() => setSelectedImage(null)}>
+            Remove
+          </button>
+        </div>
+      )}
+
       <input
         type="text"
         value={contents}
         onChange={(e) => setContents(e.target.value)}
-        placeholder={`Message ${receiver.name || receiver.email}...`}
-        required
+        placeholder={`Message ${receiver.firstname || receiver.email}...`}
         className="message-input"
       />
+
       <button type="submit" className="send-button">
         Send
       </button>
+
       {error && <div className="error">{error}</div>}
     </form>
   );

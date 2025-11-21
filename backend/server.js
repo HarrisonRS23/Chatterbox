@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require("express")
 const cors = require('cors')
+const path = require('path')
 
 
 // Create Express App
@@ -11,21 +12,27 @@ const authRoutes = require('./routes/auth') // Import routes from other file
 
 
 
-// Middleware
-app.use(express.json())
-
-app.use((req, res, next) => {
-  console.log(req.path, req.method)
-  next()
-})
-
+// CORS must be configured before other middleware
 app.use(cors({
   origin: [
     "http://localhost:3000",                  // local dev
     "https://chatterbox-9e5d6.web.app",       // URL of frontend 
   ],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Authorization']
 }));
+
+// Middleware
+app.use(express.json())
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+
+app.use((req, res, next) => {
+  console.log(req.path, req.method)
+  next()
+})
 
 
 // Health check endpoint

@@ -1,6 +1,11 @@
 const jwt = require("jsonwebtoken")
 
 const requireAuth = (req, res, next) => {
+  // Skip authentication for OPTIONS requests (CORS preflight)
+  if (req.method === 'OPTIONS') {
+    return next()
+  }
+
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1] // Bearer <token>
 
