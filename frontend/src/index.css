@@ -680,6 +680,7 @@ body {
   align-items: flex-start;
 }
 
+
 .message-bubble {
   max-width: 65%;
   min-width: 80px;
@@ -706,8 +707,15 @@ body {
 .message-text {
   margin: 0;
   font-size: 0.95rem;
-  line-height: 1.4;
   word-break: break-word;
+}
+
+.message.sent .message-text {
+  color: #fffacd;
+}
+
+.message.received .message-text {
+  color: #333;
 }
 
 .message-time {

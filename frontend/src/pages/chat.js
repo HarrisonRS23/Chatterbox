@@ -89,6 +89,13 @@ const Chat = () => {
     };
 
     fetchMessages();
+
+    // Poll for new messages every 2 seconds
+    const intervalId = setInterval(() => {
+      fetchMessages();
+    }, 2000);
+
+    return () => clearInterval(intervalId);
   }, [dispatch, user, activeChat]);
 
   // Auto-scroll to bottom when new messages arrive
