@@ -14,6 +14,24 @@ const MessageDetails = ({ message }) => {
     // Determine if message is sent by current user
     const isSent = senderId === currentUserId;
     
+    // Get sender name for display
+    const getSenderName = () => {
+        if (isSent) {
+            return "You";
+        }
+        if (message.sender) {
+            if (typeof message.sender === 'object') {
+                if (message.sender.firstname && message.sender.lastname) {
+                    return `${message.sender.firstname} ${message.sender.lastname}`;
+                }
+                return message.sender.email || "Unknown";
+            }
+        }
+        return "Unknown";
+    };
+    
+    const senderName = getSenderName();
+    
     // Check if message has an image
     const hasImage = message.imageId || (message.image && message.image.contentType);
     
@@ -55,6 +73,9 @@ const MessageDetails = ({ message }) => {
     
     return (
         <div className={`message ${isSent ? 'sent' : 'received'}`}>
+            {!isSent && (
+                <span className="message-sender">{senderName}</span>
+            )}
             <div className="message-bubble">
                 {message.contents && (
                     <p className="message-text">{message.contents}</p>
@@ -68,9 +89,12 @@ const MessageDetails = ({ message }) => {
                         />
                     </div>
                 )}
-                <span className="message-time">
-                    {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
-                </span>
+                <div className="message-footer">
+                    {isSent && <span className="message-sender-inline">{senderName}</span>}
+                    <span className="message-time">
+                        {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
+                    </span>
+                </div>
             </div>
         </div>
     )
