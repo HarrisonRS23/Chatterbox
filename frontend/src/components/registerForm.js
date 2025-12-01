@@ -4,6 +4,7 @@ import API_URL from "../config/api";
 
 const Register = () => {
   const navigate = useNavigate();
+  // Form states
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -34,7 +35,7 @@ const Register = () => {
       setError("Passwords do not match");
       return;
     }
-
+    // Post request to register for account 
     try {
       const response = await fetch(`${API_URL}/api/user/register`, {
         method: "POST",
@@ -56,7 +57,7 @@ const Register = () => {
       setSuccess("Account created successfully!");
       console.log("User registered:", data);
 
-      // Redirect to login after short delay
+      // Redirect to login after short delay (require users to log in even after registering)
       setTimeout(() => {
         navigate("/login");
       }, 1200);

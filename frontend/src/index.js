@@ -10,7 +10,6 @@ root.render(
     <MessageContextProvider>
       <App />
     </MessageContextProvider>
-    
   </React.StrictMode>
 );
 

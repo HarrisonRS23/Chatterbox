@@ -33,11 +33,13 @@ const Navbar = () => {
   }, [location]);
 
   const handleLogout = () => {
+    // Clear all local states after logout 
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
     dispatch({ type: "LOGOUT" });
+    // Redirect back to login after logging out
     navigate("/login");
   };
 

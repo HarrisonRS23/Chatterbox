@@ -8,6 +8,7 @@ const Message = () => {
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     
+    // Different behavior when clicking on chat depending of user is logged in 
     if (token && user) {
       // User is logged in, navigate to chat
       navigate('/chat');

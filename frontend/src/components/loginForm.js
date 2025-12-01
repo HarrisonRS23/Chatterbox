@@ -3,7 +3,10 @@ import { useState } from "react"
 import API_URL from "../config/api"
 
 const LoginForm = () => {
+
     const { dispatch } = useMessageContext()
+
+    // Form States
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
@@ -11,11 +14,13 @@ const LoginForm = () => {
     const login = async (e) => {
         e.preventDefault()
 
+        // Ensure fields filled
         if (!email || !password) {
             alert('Please fill in all fields')
             return
         }
 
+        // Post request to login
         try {
             const response = await fetch(`${API_URL}/api/user/login`, {
                 method: 'POST',
@@ -35,6 +40,7 @@ const LoginForm = () => {
             dispatch({ type: 'SET_USER', payload: json.user })
 
             console.log('Login successful:', json)
+            // Redirect to chat after login
             window.location.href = "/chat"
         } catch (err) {
             console.error(err)

@@ -47,7 +47,7 @@ app.use('/api/messages', messageRoutes)
 app.use('/api/groups', groupRoutes)
 
 
-
+// Ensure Proper connection to MongoDB 
 mongoose.connect(process.env.MONG_URI)
     .then(() => {
         // Listen for requests 

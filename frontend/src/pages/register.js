@@ -1,9 +1,9 @@
 import Register from "../components/registerForm"
-
+// Simply use registerForm react component
 const RegisterPage = () => {
   return (
     <div className="login">
-      <Register> </Register>
+      <Register></Register>
     </div>
   )
 }

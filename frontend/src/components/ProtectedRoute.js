@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 
+// Prevent Users from Bypassing the login screen and going to /chat
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');

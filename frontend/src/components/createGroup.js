@@ -3,11 +3,15 @@ import API_URL from "../config/api";
 import { useMessageContext } from "../hooks/useMessageContext";
 
 const CreateGroup = ({ show, onClose, onGroupCreated }) => {
+
+  // Access logged in user
   const { user } = useMessageContext();
-  const [name, setName] = useState("");
-  const [selectedFriends, setSelectedFriends] = useState([]);
-  const [friends, setFriends] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Form States
+  const [name, setName] = useState(""); // Group Name
+  const [selectedFriends, setSelectedFriends] = useState([]); // Array with all selected group member ids 
+  const [friends, setFriends] = useState([]); // Friends fetched from backend
+  const [isLoading, setIsLoading] = useState(false); // Loading state while submitting
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -16,12 +20,13 @@ const CreateGroup = ({ show, onClose, onGroupCreated }) => {
     }
   }, [show, user]);
 
+  // Fetch all friends eligible to be added to group
   const fetchFriends = async () => {
     try {
       const response = await fetch(
         `${API_URL}/api/messages/friends/${user.id}`,
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }, // Bearer used to tell backend which user is making the request
         }
       );
       const json = await response.json();
@@ -65,7 +70,7 @@ const CreateGroup = ({ show, onClose, onGroupCreated }) => {
       const response = await fetch(`${API_URL}/api/groups`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Bearer used to tell backend which user is making the request
         },
         body: formData,
       });

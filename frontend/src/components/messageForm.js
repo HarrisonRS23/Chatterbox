@@ -59,7 +59,7 @@ const MessageForm = ({ receiver }) => {
         method: "POST",
         body: formData,
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Bearer used to tell backend which user is making the request
         },
       });
 

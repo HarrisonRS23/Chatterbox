@@ -18,12 +18,13 @@ const AddFriend = ({ show, onClose, user, onFriendAdded }) => {
     setIsLoading(true);
     setStatus("");
 
+    // Send Post request to add friend
     try {
       const response = await fetch(`${API_URL}/api/messages/friends/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Bearer used to tell backend which user is making the request
         },
         body: JSON.stringify({
           userId: user.id, 
@@ -34,7 +35,7 @@ const AddFriend = ({ show, onClose, user, onFriendAdded }) => {
       const json = await response.json();
 
       if (response.ok) {
-        setStatus(`${email} added as a friend!`); // Fixed: added opening parenthesis
+        setStatus(`${email} added as a friend!`); 
         setEmail("");
         
         // Notify parent component to refresh conversations
@@ -58,6 +59,7 @@ const AddFriend = ({ show, onClose, user, onFriendAdded }) => {
     }
   };
 
+  // Allow for enter key to be pressed as well 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !isLoading) {
       handleAddFriend();

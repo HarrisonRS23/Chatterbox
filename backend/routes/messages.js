@@ -1,8 +1,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const multer = require("multer");
+// Models
 const Message = require("../models/messageModel");
 const Group = require("../models/groupModel");
+// Authentication Middleware
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../models/userModel");
 
@@ -11,7 +13,7 @@ const router = express.Router();
 // Configure multer for file uploads - store in memory for MongoDB
 const storage = multer.memoryStorage();
 
-// File filter to only accept images
+// File filter to only accept images (prevent non photo uploads)
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
@@ -24,7 +26,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024, // 5MB limit (necessary for mongo DB image storage usage)
   },
 });
 

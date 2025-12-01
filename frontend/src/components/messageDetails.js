@@ -44,7 +44,7 @@ const MessageDetails = ({ message }) => {
                 const imageUrl = `${API_URL}/api/messages/image/${message.imageId || message._id}`;
                 const response = await fetch(imageUrl, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                        Authorization: `Bearer ${localStorage.getItem('token')}` // Bearer used to tell backend which user is making the request
                     }
                 });
                 

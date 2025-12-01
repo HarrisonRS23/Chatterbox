@@ -30,6 +30,7 @@ const Chat = () => {
     }
   }, [navigate]);
 
+  // Clear local storage and return to login after logout 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -128,7 +129,7 @@ const Chat = () => {
 
     fetchMessages();
 
-    // Poll for new messages every 2 seconds
+    // Refresh for new messages every 2 seconds
     const intervalId = setInterval(() => {
       fetchMessages();
     }, 2000);
@@ -164,8 +165,11 @@ const Chat = () => {
     const isAdmin = adminId && userId && adminId === userId;
 
     let confirmMessage;
+    // Either user is a member or admin (different message showed for each)
+    // If an admin leaves a group they will delete the group for everyone in it 
     if (isAdmin) {
-      confirmMessage = `You are the admin of "${activeChat.name}". Leaving will permanently delete this group and all its messages. This action cannot be undone.\n\nAre you sure you want to delete this group?`;
+      confirmMessage = `You are the admin of "${activeChat.name}". Leaving will permanently delete this group and all its messages. 
+      This action cannot be undone.\n\nAre you sure you want to delete this group?`;
     } else {
       confirmMessage = `Are you sure you want to leave "${activeChat.name}"?`;
     }
@@ -177,7 +181,7 @@ const Chat = () => {
       let response;
       
       if (isAdmin) {
-        // Delete the entire group
+        // Delete the entire group if user was an admin
         response = await fetch(
           `${API_URL}/api/groups/${activeChat._id}`,
           {
@@ -188,7 +192,7 @@ const Chat = () => {
           }
         );
       } else {
-        // Just remove the user from the group
+        // Just remove the user from the group if not an admin
         response = await fetch(
           `${API_URL}/api/groups/${activeChat._id}/members/${user.id}`,
           {
