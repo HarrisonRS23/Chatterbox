@@ -262,10 +262,20 @@ body {
 
 /* LANDING PAGE - HERO SECTION */
 
+.landing-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .hero {
   text-align: center;
-  padding: 6rem 20px;
+  padding: 8rem 20px 6rem;
   color: white;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero h1 {
@@ -273,9 +283,10 @@ body {
   margin-bottom: 1rem;
   font-weight: 800;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+  line-height: 1.2;
 }
 
-.hero p {
+.hero-subtitle {
   font-size: 1.4rem;
   margin-bottom: 2.5rem;
   opacity: 0.95;
@@ -341,9 +352,29 @@ body {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 3rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .section-title {
+    font-size: 2rem;
+  }
 }
 
 .feature-card {
