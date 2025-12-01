@@ -20,6 +20,16 @@ const Chat = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [showGroupPopup, setShowGroupPopup] = useState(false);
 
+  // Check authentication on mount and redirect if not logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      navigate('/login', { replace: true });
+    }
+  }, [navigate]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

@@ -6,6 +6,7 @@ import Login from "./pages/login";
 import Message from './pages/MessageLanding';
 import Chat from "./pages/chat";
 import Register from "./pages/register";
+import ProtectedRoute from './components/ProtectedRoute';
 
 
 function App() {
@@ -17,7 +18,14 @@ function App() {
           <Route path="/" element={<Message />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/chat" element={<Chat />} />
+          <Route 
+            path="/chat" 
+            element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </BrowserRouter>
     </div>

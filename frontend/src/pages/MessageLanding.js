@@ -1,4 +1,22 @@
+import { useNavigate } from 'react-router-dom';
+
 const Message = () => {
+  const navigate = useNavigate();
+
+  const handleStartChatting = () => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      // User is logged in, navigate to chat
+      navigate('/chat');
+    } else {
+      // User is not logged in, navigate to login
+      navigate('/login');
+    }
+  };
+
   return (
    <div>
       {/* Hero Section */}
@@ -7,9 +25,9 @@ const Message = () => {
           <h1>Welcome to ChatterBox</h1>
           <p>A Modern, Secure, Real-Time Chat Messaging Platform</p>
           <div className="hero-buttons">
-            <a href="/login" className="btn btn-primary">
+            <button onClick={handleStartChatting} className="btn btn-primary">
               Start Chatting
-            </a>
+            </button>
             <a href="#features" className="btn btn-secondary">
               Learn More
             </a>
