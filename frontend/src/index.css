@@ -1090,3 +1090,36 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Action Buttons (Group/Friend) */
+.action-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  background-color: #f0f2f5;
+  transform: translateY(-1px);
+}
+
+.action-button:active {
+  transform: translateY(0);
+}
+
+.action-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #65676b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.action-button:hover .action-label {
+  color: #050505;
+}

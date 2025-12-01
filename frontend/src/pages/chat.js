@@ -165,25 +165,35 @@ const Chat = () => {
         <div className="sidebar">
         <div className="sidebar-header">
           <h2>Chats</h2>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <CiCirclePlus 
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <div 
+              className="action-button"
               onClick={openGroupPopup}
-              style={{ 
-                fontSize: "28px", 
-                cursor: "pointer",
-                transition: "transform 0.2s"
-              }}
               title="Create Group"
-            />
-            <CiCirclePlus 
+            >
+              <CiCirclePlus 
+                style={{ 
+                  fontSize: "24px", 
+                  cursor: "pointer",
+                  transition: "transform 0.2s"
+                }}
+              />
+              <span className="action-label">Group</span>
+            </div>
+            <div 
+              className="action-button"
               onClick={addFriend}
-              style={{ 
-                fontSize: "28px", 
-                cursor: "pointer",
-                transition: "transform 0.2s"
-              }}
               title="Add Friend"
-            />
+            >
+              <CiCirclePlus 
+                style={{ 
+                  fontSize: "24px", 
+                  cursor: "pointer",
+                  transition: "transform 0.2s"
+                }}
+              />
+              <span className="action-label">Friend</span>
+            </div>
           </div>
         </div>
         
