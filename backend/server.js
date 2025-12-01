@@ -9,6 +9,7 @@ const app = express()
 const mongoose = require('mongoose')
 const messageRoutes = require('./routes/messages') // Import routes from other file
 const authRoutes = require('./routes/auth') // Import routes from other file
+const groupRoutes = require('./routes/groups') // Import group routes
 
 
 
@@ -43,6 +44,7 @@ app.get('/health', (req, res) => {
 // Routes (api/messages before each route in the messageRoutes)
 app.use('/api/user', authRoutes)
 app.use('/api/messages', messageRoutes)
+app.use('/api/groups', groupRoutes)
 
 
 

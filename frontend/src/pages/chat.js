@@ -7,15 +7,18 @@ import API_URL from "../config/api";
 import MessageDetails from "../components/messageDetails";
 import MessageForm from "../components/messageForm";
 import Popup from "../components/addFriend";
+import CreateGroup from "../components/createGroup";
 
 const Chat = () => {
   const navigate = useNavigate();
   const { user, messages, dispatch } = useMessageContext();
   const [conversations, setConversations] = useState([]); // list of users/convos
-  const [activeChat, setActiveChat] = useState(null); // selected conversation
+  const [groups, setGroups] = useState([]); // list of groups
+  const [activeChat, setActiveChat] = useState(null); // selected conversation (user or group)
   
-  // Pop-up 
+  // Pop-ups 
   const [showPopup, setShowPopup] = useState(false);
+  const [showGroupPopup, setShowGroupPopup] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -36,23 +39,45 @@ const Chat = () => {
     openPopup();
   };
 
+  const openGroupPopup = () => {
+    setShowGroupPopup(true);
+  };
+
+  const closeGroupPopup = () => {
+    setShowGroupPopup(false);
+  };
+
   // Fetch all conversations (users messaged with)
   const fetchConversations = useCallback(async () => {
     if (!user) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/messages/conversations/${user.id}`, 
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-      const json = await response.json();
-      if (response.ok) {
-        setConversations(json);
+      const [conversationsRes, groupsRes] = await Promise.all([
+        fetch(
+          `${API_URL}/api/messages/conversations/${user.id}`, 
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          }
+        ),
+        fetch(
+          `${API_URL}/api/groups/user/${user.id}`,
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          }
+        )
+      ]);
+
+      const conversationsJson = await conversationsRes.json();
+      const groupsJson = await groupsRes.json();
+
+      if (conversationsRes.ok) {
+        setConversations(conversationsJson);
+      }
+      if (groupsRes.ok) {
+        setGroups(groupsJson);
       }
     } catch (err) {
-      console.error("Failed to fetch conversations:", err);
+      console.error("Failed to fetch conversations/groups:", err);
     }
   }, [user]);
 
@@ -66,12 +91,15 @@ const Chat = () => {
       if (!user || !activeChat) return;
 
       try {
-        const response = await fetch(
-          `${API_URL}/api/messages?sender=${user.id}&receiver=${activeChat._id}`,
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          }
-        );
+        // Check if activeChat is a group (has 'name' property) or a user
+        const isGroup = activeChat.name !== undefined;
+        const url = isGroup
+          ? `${API_URL}/api/messages?group=${activeChat._id}`
+          : `${API_URL}/api/messages?sender=${user.id}&receiver=${activeChat._id}`;
+
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
         const json = await response.json();
         if (response.ok) {
           dispatch({ type: "SET_MESSAGES", payload: json });
@@ -111,6 +139,11 @@ const Chat = () => {
     fetchConversations();
   };
 
+  // Handle group created - refresh conversations
+  const handleGroupCreated = () => {
+    fetchConversations();
+  };
+
   return (
     <div className="chat-container">
       {/* Top header bar */}
@@ -132,32 +165,74 @@ const Chat = () => {
         <div className="sidebar">
         <div className="sidebar-header">
           <h2>Chats</h2>
-          <CiCirclePlus 
-            onClick={addFriend}
-            style={{ 
-              fontSize: "32px", 
-              cursor: "pointer",
-              transition: "transform 0.2s"
-            }}
-            title="Add Friend"
-          />
+          <div style={{ display: "flex", gap: "8px" }}>
+            <CiCirclePlus 
+              onClick={openGroupPopup}
+              style={{ 
+                fontSize: "28px", 
+                cursor: "pointer",
+                transition: "transform 0.2s"
+              }}
+              title="Create Group"
+            />
+            <CiCirclePlus 
+              onClick={addFriend}
+              style={{ 
+                fontSize: "28px", 
+                cursor: "pointer",
+                transition: "transform 0.2s"
+              }}
+              title="Add Friend"
+            />
+          </div>
         </div>
-        {conversations.length > 0 ? (
-          conversations.map((conv) => (
-            <div
-              key={conv._id}
-              className={`user-item ${
-                activeChat && activeChat._id === conv._id ? "active" : ""
-              }`}
-              onClick={() => setActiveChat(conv)}
-            >
-              {(conv.firstname && conv.lastname)
-              ? `${conv.firstname} ${conv.lastname}`
-              : conv.email}
+        
+        {/* Groups Section */}
+        {groups.length > 0 && (
+          <div>
+            <div style={{ padding: "10px 20px", fontWeight: "600", color: "#65676b", fontSize: "0.85rem" }}>
+              GROUPS
             </div>
-          ))
-        ) : (
-          <div className="no-convos">No conversations yet. Add a friend to start chatting!</div>
+            {groups.map((group) => (
+              <div
+                key={group._id}
+                className={`user-item ${
+                  activeChat && activeChat._id === group._id && activeChat.name ? "active" : ""
+                }`}
+                onClick={() => setActiveChat(group)}
+              >
+                <span style={{ fontWeight: "600" }}>{group.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 1-on-1 Conversations Section */}
+        {conversations.length > 0 && (
+          <div>
+            {groups.length > 0 && (
+              <div style={{ padding: "10px 20px", fontWeight: "600", color: "#65676b", fontSize: "0.85rem" }}>
+                DIRECT MESSAGES
+              </div>
+            )}
+            {conversations.map((conv) => (
+              <div
+                key={conv._id}
+                className={`user-item ${
+                  activeChat && activeChat._id === conv._id && !activeChat.name ? "active" : ""
+                }`}
+                onClick={() => setActiveChat(conv)}
+              >
+                {(conv.firstname && conv.lastname)
+                ? `${conv.firstname} ${conv.lastname}`
+                : conv.email}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {conversations.length === 0 && groups.length === 0 && (
+          <div className="no-convos">No conversations yet. Add a friend or create a group to start chatting!</div>
         )}
       </div>
 
@@ -169,12 +244,19 @@ const Chat = () => {
           user={user}
           onFriendAdded={handleFriendAdded}
         />
+        <CreateGroup
+          show={showGroupPopup}
+          onClose={closeGroupPopup}
+          onGroupCreated={handleGroupCreated}
+        />
         
         <div className="chat-header">
           {activeChat 
-            ? (activeChat.firstname && activeChat.lastname 
-                ? `${activeChat.firstname} ${activeChat.lastname}` 
-                : activeChat.email)
+            ? (activeChat.name 
+                ? activeChat.name
+                : (activeChat.firstname && activeChat.lastname 
+                    ? `${activeChat.firstname} ${activeChat.lastname}` 
+                    : activeChat.email))
             : "Select a chat"}
         </div>
 

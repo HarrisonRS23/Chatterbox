@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const Message = require("../models/messageModel");
+const Group = require("../models/groupModel");
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../models/userModel");
 
@@ -30,15 +31,19 @@ const upload = multer({
 // Require authentication for all routes
 router.use(requireAuth);
 
-// ---------- Get messages between two users ----------
+// ---------- Get messages (supports both 1-on-1 and group messages) ----------
 router.get("/", async (req, res) => {
   const userId = req.user.id;
-  const { sender, receiver } = req.query;
+  const { sender, receiver, group } = req.query;
 
   try {
     let filter = {};
 
-    if (sender && receiver) {
+    if (group) {
+      // Fetch messages for a specific group
+      filter = { group: group };
+    } else if (sender && receiver) {
+      // Fetch 1-on-1 messages between two users
       filter = {
         $or: [
           { sender, recipient: receiver },
@@ -46,14 +51,26 @@ router.get("/", async (req, res) => {
         ],
       };
     } else {
-      filter = { $or: [{ sender: userId }, { recipient: userId }] };
+      // Fetch all messages for user (both 1-on-1 and groups they're in)
+      // First get all groups user is a member of
+      const userGroups = await Group.find({ members: userId }).select("_id");
+      const groupIds = userGroups.map(g => g._id);
+      
+      filter = {
+        $or: [
+          { sender: userId },
+          { recipient: userId },
+          { group: { $in: groupIds } }
+        ]
+      };
     }
 
     const messages = await Message.find(filter)
       .select("-image.data") // Exclude image buffer from response
       .sort({ createdAt: 1 })
       .populate("sender", "email firstname lastname")
-      .populate("recipient", "email firstname lastname");
+      .populate("recipient", "email firstname lastname")
+      .populate("group", "name members");
 
     // Add imageId to messages that have images
     const messagesWithImageId = messages.map(msg => {
@@ -145,6 +162,7 @@ router.post("/", (req, res, next) => {
   const body = req.body || {};
   const contents = body.contents || "";
   const recipient = body.recipient;
+  const groupId = body.group;
   const sender = req.user?.id || req.user?._id; // Use .id or ._id from decoded token
 
   // At least one of contents or image must be provided
@@ -152,8 +170,13 @@ router.post("/", (req, res, next) => {
     return res.status(400).json({ error: "Either message content or an image is required" });
   }
 
-  if (!recipient) {
-    return res.status(400).json({ error: "Recipient is required" });
+  // Either recipient (1-on-1) or group must be provided, but not both
+  if (!recipient && !groupId) {
+    return res.status(400).json({ error: "Either recipient or group is required" });
+  }
+
+  if (recipient && groupId) {
+    return res.status(400).json({ error: "Cannot specify both recipient and group" });
   }
 
   if (!sender) {
@@ -178,12 +201,18 @@ router.post("/", (req, res, next) => {
       contents: contents || "",
       image: imageData,
       sender: senderId,
-      recipient
+      recipient: recipient || null,
+      group: groupId || null
     });
 
-    // Populate sender and recipient info
-    await message.populate("sender", "email firstname lastname")
-    await message.populate("recipient", "email firstname lastname")
+    // Populate sender, recipient (if 1-on-1), and group (if group message) info
+    await message.populate("sender", "email firstname lastname");
+    if (recipient) {
+      await message.populate("recipient", "email firstname lastname");
+    }
+    if (groupId) {
+      await message.populate("group", "name members");
+    }
 
     // Return message without image buffer (send imageId instead)
     const messageResponse = message.toObject();

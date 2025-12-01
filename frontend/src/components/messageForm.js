@@ -12,12 +12,23 @@ const MessageForm = ({ receiver }) => {
   // Ref for hidden file input
   const fileInputRef = useRef(null);
 
+  // Check if receiver is a group (has 'name' property)
+  const isGroup = receiver.name !== undefined;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!contents.trim() && !selectedImage) {
-      setError("Please type a message or attach an image.");
-      return;
+    // For groups, only text is allowed. For 1-on-1, allow text or image.
+    if (isGroup) {
+      if (!contents.trim()) {
+        setError("Please type a message.");
+        return;
+      }
+    } else {
+      if (!contents.trim() && !selectedImage) {
+        setError("Please type a message or attach an image.");
+        return;
+      }
     }
 
     const token = localStorage.getItem("token");
@@ -33,10 +44,15 @@ const MessageForm = ({ receiver }) => {
     }
 
     const formData = new FormData();
-    formData.append("sender", user.id);
-    formData.append("recipient", receiver._id);
     formData.append("contents", contents);
-    if (selectedImage) formData.append("image", selectedImage);
+    
+    if (isGroup) {
+      formData.append("group", receiver._id);
+    } else {
+      formData.append("recipient", receiver._id);
+      // Only append image for 1-on-1 chats, not groups
+      if (selectedImage) formData.append("image", selectedImage);
+    }
 
     try {
       const response = await fetch(`${API_URL}/api/messages`, {
@@ -67,24 +83,26 @@ const MessageForm = ({ receiver }) => {
 
   return (
     <form className="message-form" onSubmit={handleSubmit}>
-      {/* ICON → opens file selector */}
-      <div className="pic-button">
-        <AiOutlinePicture
-          size={30}
-          className="pic"
-          onClick={() => fileInputRef.current.click()}
-        />
-        <input
-          type="file"
-          ref={fileInputRef}
-          style={{ display: "none" }}
-          accept="image/*"
-          onChange={(e) => setSelectedImage(e.target.files[0])}
-        />
-      </div>
+      {/* ICON → opens file selector - only show for 1-on-1 chats, not groups */}
+      {!isGroup && (
+        <div className="pic-button">
+          <AiOutlinePicture
+            size={30}
+            className="pic"
+            onClick={() => fileInputRef.current.click()}
+          />
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            accept="image/*"
+            onChange={(e) => setSelectedImage(e.target.files[0])}
+          />
+        </div>
+      )}
 
-      {/* Preview */}
-      {selectedImage && (
+      {/* Preview - only show for 1-on-1 chats, not groups */}
+      {!isGroup && selectedImage && (
         <div>
           <img
             src={URL.createObjectURL(selectedImage)}
@@ -101,7 +119,9 @@ const MessageForm = ({ receiver }) => {
         type="text"
         value={contents}
         onChange={(e) => setContents(e.target.value)}
-        placeholder={`Message ${receiver.firstname || receiver.email}...`}
+        placeholder={receiver.name 
+          ? `Message ${receiver.name}...` 
+          : `Message ${receiver.firstname || receiver.email}...`}
         className="message-input"
       />
 

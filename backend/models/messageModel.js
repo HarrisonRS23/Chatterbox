@@ -25,9 +25,14 @@ const messageSchema = new Schema(
       required: true
     },
     recipient: {
-      type: Schema.Types.ObjectId,  // references the User model
+      type: Schema.Types.ObjectId,  // references the User model (for 1-on-1 messages)
       ref: "User",
-      required: true
+      required: false
+    },
+    group: {
+      type: Schema.Types.ObjectId,  // references the Group model (for group messages)
+      ref: "Group",
+      required: false
     }
   },
   { timestamps: true } 
