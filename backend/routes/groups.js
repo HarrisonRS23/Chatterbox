@@ -1,6 +1,5 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const multer = require("multer");
 const Group = require("../models/groupModel");
 const Message = require("../models/messageModel");
 const requireAuth = require("../middleware/requireAuth");
@@ -8,26 +7,11 @@ const User = require("../models/userModel");
 
 const router = express.Router();
 
-// Configure multer for group image uploads
-const storage = multer.memoryStorage();
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only image files are allowed"), false);
-  }
-};
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
-});
-
 // Require authentication for all routes
 router.use(requireAuth);
 
 // ---------- Create a new group ----------
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", async (req, res) => {
   const { name, description, memberIds } = req.body;
   const adminId = req.user?.id || req.user?._id;
 
@@ -40,11 +24,11 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 
   try {
-    // Parse memberIds (should be JSON array string)
+    // Parse memberIds (can be array or JSON string)
     let members = [adminId]; // Admin is always a member
     if (memberIds) {
       try {
-        const parsedMembers = typeof memberIds === 'string' ? JSON.parse(memberIds) : memberIds;
+        const parsedMembers = Array.isArray(memberIds) ? memberIds : JSON.parse(memberIds);
         if (Array.isArray(parsedMembers)) {
           members = [...new Set([adminId, ...parsedMembers])]; // Remove duplicates
         }
@@ -53,33 +37,17 @@ router.post("/", upload.single("image"), async (req, res) => {
       }
     }
 
-    // Prepare image data if uploaded
-    let imageData = null;
-    if (req.file) {
-      imageData = {
-        data: req.file.buffer,
-        contentType: req.file.mimetype
-      };
-    }
-
     const group = await Group.create({
       name: name.trim(),
       description: description || "",
       members: members,
-      admin: adminId,
-      image: imageData
+      admin: adminId
     });
 
     await group.populate("members", "email firstname lastname");
     await group.populate("admin", "email firstname lastname");
 
-    // Return group without image buffer
     const groupResponse = group.toObject();
-    if (groupResponse.image && groupResponse.image.data) {
-      groupResponse.imageId = group._id.toString();
-      delete groupResponse.image;
-    }
-
     res.status(201).json(groupResponse);
   } catch (err) {
     console.error("Create group error:", err);
@@ -95,55 +63,18 @@ router.get("/user/:userId", async (req, res) => {
     const groups = await Group.find({
       members: userId
     })
-      .select("-image.data") // Exclude image buffer
+      .select("-image")
       .populate("members", "email firstname lastname")
       .populate("admin", "email firstname lastname")
       .sort({ updatedAt: -1 });
 
-    // Add imageId to groups that have images
-    const groupsWithImageId = groups.map(group => {
-      const groupObj = group.toObject();
-      if (groupObj.image && groupObj.image.contentType) {
-        groupObj.imageId = group._id.toString();
-      }
-      return groupObj;
-    });
-
-    res.status(200).json(groupsWithImageId);
+    res.status(200).json(groups);
   } catch (err) {
     console.error("Get groups error:", err);
     res.status(500).json({ error: "Server error fetching groups" });
   }
 });
 
-// ---------- Get group image (must be before /:groupId route) ----------
-router.get("/image/:groupId", async (req, res) => {
-  const { groupId } = req.params;
-  const userId = req.user?.id || req.user?._id;
-
-  try {
-    const group = await Group.findById(groupId).select("image members");
-
-    if (!group || !group.image || !group.image.data) {
-      return res.status(404).json({ error: "Image not found" });
-    }
-
-    // Check if user is a member
-    const isMember = group.members.some(
-      member => member.toString() === userId.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    res.contentType(group.image.contentType);
-    res.send(group.image.data);
-  } catch (err) {
-    console.error("Get group image error:", err);
-    res.status(500).json({ error: "Server error fetching image" });
-  }
-});
 
 // ---------- Get a specific group ----------
 router.get("/:groupId", async (req, res) => {
@@ -152,7 +83,7 @@ router.get("/:groupId", async (req, res) => {
 
   try {
     const group = await Group.findById(groupId)
-      .select("-image.data")
+      .select("-image")
       .populate("members", "email firstname lastname")
       .populate("admin", "email firstname lastname");
 
@@ -170,10 +101,6 @@ router.get("/:groupId", async (req, res) => {
     }
 
     const groupObj = group.toObject();
-    if (groupObj.image && groupObj.image.contentType) {
-      groupObj.imageId = group._id.toString();
-    }
-
     res.status(200).json(groupObj);
   } catch (err) {
     console.error("Get group error:", err);
@@ -218,10 +145,6 @@ router.post("/:groupId/members", async (req, res) => {
     await group.populate("admin", "email firstname lastname");
 
     const groupObj = group.toObject();
-    if (groupObj.image && groupObj.image.contentType) {
-      groupObj.imageId = group._id.toString();
-      delete groupObj.image;
-    }
 
     res.status(200).json(groupObj);
   } catch (err) {
@@ -264,11 +187,6 @@ router.delete("/:groupId/members/:memberId", async (req, res) => {
     await group.populate("admin", "email firstname lastname");
 
     const groupObj = group.toObject();
-    if (groupObj.image && groupObj.image.contentType) {
-      groupObj.imageId = group._id.toString();
-      delete groupObj.image;
-    }
-
     res.status(200).json(groupObj);
   } catch (err) {
     console.error("Remove member error:", err);

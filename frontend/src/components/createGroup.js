@@ -63,16 +63,16 @@ const CreateGroup = ({ show, onClose, onGroupCreated }) => {
     setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("memberIds", JSON.stringify(selectedFriends));
-
       const response = await fetch(`${API_URL}/api/groups`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`, // Bearer used to tell backend which user is making the request
         },
-        body: formData,
+        body: JSON.stringify({
+          name: name,
+          memberIds: selectedFriends
+        }),
       });
 
       const json = await response.json();
