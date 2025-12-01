@@ -144,6 +144,38 @@ const Chat = () => {
     fetchConversations();
   };
 
+  // Handle leaving a group
+  const handleLeaveGroup = async () => {
+    if (!activeChat || !activeChat.name || !user) return;
+
+    const confirmLeave = window.confirm(`Are you sure you want to leave "${activeChat.name}"?`);
+    if (!confirmLeave) return;
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/groups/${activeChat._id}/members/${user.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Clear active chat and refresh conversations
+        setActiveChat(null);
+        fetchConversations();
+      } else {
+        const json = await response.json();
+        alert(json.error || "Failed to leave group");
+      }
+    } catch (err) {
+      console.error("Failed to leave group:", err);
+      alert("Something went wrong. Please try again.");
+    }
+  };
+
   return (
     <div className="chat-container">
       {/* Top header bar */}
@@ -261,13 +293,26 @@ const Chat = () => {
         />
         
         <div className="chat-header">
-          {activeChat 
-            ? (activeChat.name 
-                ? activeChat.name
-                : (activeChat.firstname && activeChat.lastname 
-                    ? `${activeChat.firstname} ${activeChat.lastname}` 
-                    : activeChat.email))
-            : "Select a chat"}
+          <div className="chat-header-content">
+            <span>
+              {activeChat 
+                ? (activeChat.name 
+                    ? activeChat.name
+                    : (activeChat.firstname && activeChat.lastname 
+                        ? `${activeChat.firstname} ${activeChat.lastname}` 
+                        : activeChat.email))
+                : "Select a chat"}
+            </span>
+            {activeChat && activeChat.name && (
+              <button 
+                className="leave-group-btn" 
+                onClick={handleLeaveGroup}
+                title="Leave Group"
+              >
+                Leave
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="messages" id="messages">
