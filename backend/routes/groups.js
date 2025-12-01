@@ -116,6 +116,35 @@ router.get("/user/:userId", async (req, res) => {
   }
 });
 
+// ---------- Get group image (must be before /:groupId route) ----------
+router.get("/image/:groupId", async (req, res) => {
+  const { groupId } = req.params;
+  const userId = req.user?.id || req.user?._id;
+
+  try {
+    const group = await Group.findById(groupId).select("image members");
+
+    if (!group || !group.image || !group.image.data) {
+      return res.status(404).json({ error: "Image not found" });
+    }
+
+    // Check if user is a member
+    const isMember = group.members.some(
+      member => member.toString() === userId.toString()
+    );
+
+    if (!isMember) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    res.contentType(group.image.contentType);
+    res.send(group.image.data);
+  } catch (err) {
+    console.error("Get group image error:", err);
+    res.status(500).json({ error: "Server error fetching image" });
+  }
+});
+
 // ---------- Get a specific group ----------
 router.get("/:groupId", async (req, res) => {
   const { groupId } = req.params;
@@ -247,32 +276,33 @@ router.delete("/:groupId/members/:memberId", async (req, res) => {
   }
 });
 
-// ---------- Get group image ----------
-router.get("/image/:groupId", async (req, res) => {
+// ---------- Delete a group (admin only) ----------
+router.delete("/:groupId", async (req, res) => {
   const { groupId } = req.params;
   const userId = req.user?.id || req.user?._id;
 
   try {
-    const group = await Group.findById(groupId).select("image members");
+    const group = await Group.findById(groupId);
 
-    if (!group || !group.image || !group.image.data) {
-      return res.status(404).json({ error: "Image not found" });
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
     }
 
-    // Check if user is a member
-    const isMember = group.members.some(
-      member => member.toString() === userId.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({ error: "Access denied" });
+    // Check if user is admin
+    if (group.admin.toString() !== userId.toString()) {
+      return res.status(403).json({ error: "Only group admin can delete the group" });
     }
 
-    res.contentType(group.image.contentType);
-    res.send(group.image.data);
+    // Delete all messages associated with this group
+    await Message.deleteMany({ group: groupId });
+
+    // Delete the group
+    await Group.findByIdAndDelete(groupId);
+
+    res.status(200).json({ message: "Group deleted successfully" });
   } catch (err) {
-    console.error("Get group image error:", err);
-    res.status(500).json({ error: "Server error fetching image" });
+    console.error("Delete group error:", err);
+    res.status(500).json({ error: "Server error deleting group" });
   }
 });
 

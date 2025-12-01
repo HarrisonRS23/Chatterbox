@@ -158,30 +158,71 @@ const Chat = () => {
   const handleLeaveGroup = async () => {
     if (!activeChat || !activeChat.name || !user) return;
 
-    const confirmLeave = window.confirm(`Are you sure you want to leave "${activeChat.name}"?`);
+    // Check if user is the admin
+    const adminId = activeChat.admin?._id?.toString() || activeChat.admin?.toString() || activeChat.admin;
+    const userId = user.id?.toString() || user._id?.toString();
+    const isAdmin = adminId && userId && adminId === userId;
+
+    let confirmMessage;
+    if (isAdmin) {
+      confirmMessage = `You are the admin of "${activeChat.name}". Leaving will permanently delete this group and all its messages. This action cannot be undone.\n\nAre you sure you want to delete this group?`;
+    } else {
+      confirmMessage = `Are you sure you want to leave "${activeChat.name}"?`;
+    }
+
+    const confirmLeave = window.confirm(confirmMessage);
     if (!confirmLeave) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/groups/${activeChat._id}/members/${user.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      let response;
+      
+      if (isAdmin) {
+        // Delete the entire group
+        response = await fetch(
+          `${API_URL}/api/groups/${activeChat._id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+      } else {
+        // Just remove the user from the group
+        response = await fetch(
+          `${API_URL}/api/groups/${activeChat._id}/members/${user.id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+      }
 
       if (response.ok) {
         // Clear active chat and refresh conversations
         setActiveChat(null);
         fetchConversations();
       } else {
-        const json = await response.json();
-        alert(json.error || "Failed to leave group");
+        // Try to parse JSON error, but handle HTML responses (like 404 pages)
+        let errorMessage = isAdmin ? "Failed to delete group" : "Failed to leave group";
+        try {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const json = await response.json();
+            errorMessage = json.error || errorMessage;
+          } else {
+            // If it's not JSON (like HTML 404 page), use status text
+            errorMessage = `Error ${response.status}: ${response.statusText || errorMessage}`;
+          }
+        } catch (parseErr) {
+          errorMessage = `Error ${response.status}: ${response.statusText || errorMessage}`;
+        }
+        alert(errorMessage);
       }
     } catch (err) {
-      console.error("Failed to leave group:", err);
+      console.error(isAdmin ? "Failed to delete group:" : "Failed to leave group:", err);
       alert("Something went wrong. Please try again.");
     }
   };
