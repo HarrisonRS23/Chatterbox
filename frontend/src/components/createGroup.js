@@ -5,7 +5,6 @@ import { useMessageContext } from "../hooks/useMessageContext";
 const CreateGroup = ({ show, onClose, onGroupCreated }) => {
   const { user } = useMessageContext();
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [friends, setFriends] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +60,6 @@ const CreateGroup = ({ show, onClose, onGroupCreated }) => {
     try {
       const formData = new FormData();
       formData.append("name", name);
-      formData.append("description", description);
       formData.append("memberIds", JSON.stringify(selectedFriends));
 
       const response = await fetch(`${API_URL}/api/groups`, {
@@ -76,7 +74,6 @@ const CreateGroup = ({ show, onClose, onGroupCreated }) => {
 
       if (response.ok) {
         setName("");
-        setDescription("");
         setSelectedFriends([]);
         if (onGroupCreated) {
           onGroupCreated();
@@ -99,7 +96,6 @@ const CreateGroup = ({ show, onClose, onGroupCreated }) => {
       <div className="popup-content" onClick={(e) => e.stopPropagation()}>
         <div className="popup-header">
           <h2>Create Group</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -111,16 +107,6 @@ const CreateGroup = ({ show, onClose, onGroupCreated }) => {
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter group name"
               required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Description (optional)</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter group description"
-              rows="3"
             />
           </div>
 
@@ -160,11 +146,11 @@ const CreateGroup = ({ show, onClose, onGroupCreated }) => {
           {error && <div className="error" style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
 
           <div className="form-actions">
-            <button type="button" onClick={onClose} disabled={isLoading}>
-              Cancel
-            </button>
-            <button type="submit" disabled={isLoading}>
+            <button type="submit" disabled={isLoading} className="btn-primary">
               {isLoading ? "Creating..." : "Create Group"}
+            </button>
+            <button type="button" onClick={onClose} disabled={isLoading} className="btn-secondary">
+              Cancel
             </button>
           </div>
         </form>
