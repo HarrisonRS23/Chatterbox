@@ -1,5 +1,5 @@
 import { useMessageContext } from '../hooks/useMessageContext'
-import formatDistanceToNow from 'date-fns/formatDistanceToNow'
+import { formatDistanceToNow } from "date-fns";
 import API_URL from '../config/api'
 import { useEffect, useState } from 'react'
 

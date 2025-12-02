@@ -44,7 +44,7 @@ ChatterBox is a full-stack real-time messaging application that enables users to
 1. **Clone the repository:**
 ```bash
 git clone https://github.com/HarrisonRS23/Chatterbox 
-cd WebDevFinal
+cd Chatterbox
 ```
 
 2. **Install backend dependencies:**
@@ -64,8 +64,9 @@ npm install
 Create a `.env` file in the `backend` directory:
 ```env
 MONG_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
+JWT_SECRET=any_combo_of_random_characters
 PORT=4000
+SECRET=any_combo_of_random_characters
 ```
 
 5. **Start the backend server:**
