@@ -27,6 +27,21 @@ app.use(cors({
 // Middleware
 app.use(express.json())
 
+// Data sanitization middleware - sanitize all request bodies and query params
+const sanitize = require('mongo-sanitize');
+app.use((req, res, next) => {
+  if (req.body) {
+    req.body = sanitize(req.body);
+  }
+  if (req.query) {
+    req.query = sanitize(req.query);
+  }
+  if (req.params) {
+    req.params = sanitize(req.params);
+  }
+  next();
+});
+
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 

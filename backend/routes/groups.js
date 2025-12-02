@@ -15,8 +15,22 @@ router.post("/", async (req, res) => {
   const { name, description, memberIds } = req.body;
   const adminId = req.user?.id || req.user?._id;
 
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: "Group name is required" });
+  // Validate input - check presence and type
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: "Group name is required and must be a string" });
+  }
+  if (name.trim().length < 1 || name.trim().length > 100) {
+    return res.status(400).json({ error: "Group name must be between 1 and 100 characters" });
+  }
+
+  // Validate description if provided
+  if (description !== undefined && description !== null) {
+    if (typeof description !== 'string') {
+      return res.status(400).json({ error: "Description must be a string" });
+    }
+    if (description.length > 500) {
+      return res.status(400).json({ error: "Description must be less than 500 characters" });
+    }
   }
 
   if (!adminId) {
@@ -24,14 +38,19 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // Parse memberIds (can be array or JSON string)
+    // Parse and validate memberIds (can be array or JSON string)
     let members = [adminId]; // Admin is always a member
     if (memberIds) {
       try {
         const parsedMembers = Array.isArray(memberIds) ? memberIds : JSON.parse(memberIds);
-        if (Array.isArray(parsedMembers)) {
-          members = [...new Set([adminId, ...parsedMembers])]; // Remove duplicates
+        if (!Array.isArray(parsedMembers)) {
+          return res.status(400).json({ error: "memberIds must be an array" });
         }
+        // Validate each member ID is a string
+        if (!parsedMembers.every(id => typeof id === 'string' && id.length > 0)) {
+          return res.status(400).json({ error: "All member IDs must be non-empty strings" });
+        }
+        members = [...new Set([adminId, ...parsedMembers])]; // Remove duplicates
       } catch (e) {
         return res.status(400).json({ error: "Invalid memberIds format" });
       }

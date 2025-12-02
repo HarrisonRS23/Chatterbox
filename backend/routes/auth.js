@@ -13,9 +13,12 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Please provide email and password' });
+    // Validate input - check presence and type
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ message: 'Please provide a valid email' });
+    }
+    if (!password || typeof password !== 'string' || password.length === 0) {
+      return res.status(400).json({ message: 'Please provide a valid password' });
     }
 
     // Check for user
@@ -59,18 +62,36 @@ router.post('/register', async (req, res) => {
   try {
     const { firstname, lastname, email, password} = req.body;
 
-    // Validate required fields
-    if (!firstname || !firstname.trim()) {
-      return res.status(400).json({ message: 'First name is required' });
+    // Validate required fields - check presence and type
+    if (!firstname || typeof firstname !== 'string' || !firstname.trim()) {
+      return res.status(400).json({ message: 'First name is required and must be a string' });
+    }
+    if (firstname.trim().length < 1 || firstname.trim().length > 50) {
+      return res.status(400).json({ message: 'First name must be between 1 and 50 characters' });
     }
     
-    if (!lastname || !lastname.trim()) {
-      return res.status(400).json({ message: 'Last name is required' });
+    if (!lastname || typeof lastname !== 'string' || !lastname.trim()) {
+      return res.status(400).json({ message: 'Last name is required and must be a string' });
+    }
+    if (lastname.trim().length < 1 || lastname.trim().length > 50) {
+      return res.status(400).json({ message: 'Last name must be between 1 and 50 characters' });
     }
 
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Please provide email and password' });
+    // Validate email and password - check presence, type, and format
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ message: 'Please provide a valid email' });
+    }
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({ message: 'Please provide a valid email format' });
+    }
+    
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ message: 'Please provide a valid password' });
+    }
+    if (password.length < 6 || password.length > 100) {
+      return res.status(400).json({ message: 'Password must be between 6 and 100 characters' });
     }
 
     // Check for existing user

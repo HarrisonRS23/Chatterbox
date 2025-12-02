@@ -167,9 +167,33 @@ router.post("/", (req, res, next) => {
   const groupId = body.group;
   const sender = req.user?.id || req.user?._id; // Use .id or ._id from decoded token
 
+  // Validate contents if provided
+  if (contents !== undefined && contents !== null) {
+    if (typeof contents !== 'string') {
+      return res.status(400).json({ error: "Message contents must be a string" });
+    }
+    if (contents.length > 5000) {
+      return res.status(400).json({ error: "Message contents must be less than 5000 characters" });
+    }
+  }
+
   // At least one of contents or image must be provided
   if ((!contents || !contents.trim()) && !req.file) {
     return res.status(400).json({ error: "Either message content or an image is required" });
+  }
+
+  // Validate recipient if provided
+  if (recipient !== undefined && recipient !== null) {
+    if (typeof recipient !== 'string' || recipient.trim().length === 0) {
+      return res.status(400).json({ error: "Recipient must be a valid string ID" });
+    }
+  }
+
+  // Validate groupId if provided
+  if (groupId !== undefined && groupId !== null) {
+    if (typeof groupId !== 'string' || groupId.trim().length === 0) {
+      return res.status(400).json({ error: "Group ID must be a valid string ID" });
+    }
   }
 
   // Either recipient (1-on-1) or group must be provided, but not both
