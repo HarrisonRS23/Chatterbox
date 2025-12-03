@@ -69,6 +69,12 @@ PORT=4000
 SECRET=any_combo_of_random_characters
 ```
 
+Create a `.env` file in the `frontend` directory:
+```env
+REACT_APP_API_URL=http://localhost:4000
+
+```
+
 5. **Start the backend server:**
 ```bash
 cd backend
