@@ -69,7 +69,7 @@ PORT=4000
 SECRET=any_combo_of_random_characters
 ```
 
-Create a `.env` file in the `frontend` directory:
+Edit the `.env` file in the `frontend` directory:
 ```env
 REACT_APP_API_URL=http://localhost:4000
 
@@ -117,3 +117,15 @@ Created and maintained by Harrison Sheldon (https://github.com/harrisonRS23)
 ## License
 
 This project is licensed under the MIT License
+
+Users:
+
+Main:
+joe@email.com
+password
+
+bob@email.com   
+bobbob
+
+michael@email.com
+michael
